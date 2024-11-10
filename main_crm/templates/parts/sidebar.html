@@ -1,0 +1,61 @@
+
+<style>
+.sidebar {
+    background-color: #343a40;
+    height: 100vh;
+    padding-top: 20px;
+}
+.sidebar a {
+    color: #ffffff;
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+}
+.sidebar a:hover {
+    background-color: #495057;
+    text-decoration: none;
+}
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <div class="sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'dashboard'%}">
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'patients'%}">
+                            Patients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{%url 'Appointments'%}">
+                            Appointments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'billing'%}">
+                            Billing
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'report'%}">
+                            Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'settings'%}">
+                            Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+
+

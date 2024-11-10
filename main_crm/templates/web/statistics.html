@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* الهوية البصرية الأساسية */
+        body {
+            background: linear-gradient(120deg, #ffffff, #f9e1e7);
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+
+        .card-header {
+            font-weight: bold;
+            color: #b88b4a;
+            padding: 15px 20px;
+            border-bottom: 2px solid #b88b4a;
+        }
+
+        .card-body {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 0 0 10px 10px;
+        }
+
+        h1.h2 {
+            color: #343a40;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .stats-card h4 {
+            color: #ff6699;
+            font-size: 2em;
+            margin: 0;
+        }
+
+        .btn-primary {
+            background-color: #ff6699;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #ff3366;
+        }
+
+        .form-inline {
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-inline label {
+            margin-right: 10px;
+        }
+
+        .form-inline .form-control {
+            margin-right: 10px;
+        }
+
+        .form-inline .btn {
+            margin-top: 10px;
+        }
+
+        /* تحسين العرض على الهواتف */
+        @media (max-width: 768px) {
+            .card {
+                padding: 10px;
+            }
+
+            h1.h2 {
+                font-size: 1.5em;
+            }
+
+            .stats-card h4 {
+                font-size: 1.5em;
+            }
+
+            .btn-primary {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="h2">Statistics</h1>
+
+   
+    <!-- عرض إحصائيات عامة -->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <div class="card stats-card">
+                <div class="card-header">
+                    Total Companies
+                </div>
+                <div class="card-body">
+                    <h4>{{ total_companies }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card stats-card">
+                <div class="card-header">
+                    Total Patients
+                </div>
+                <div class="card-body">
+                    <h4>{{ total_patients }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card stats-card">
+                <div class="card-header">
+                    Total Visits
+                </div>
+                <div class="card-body">
+                    <h4>{{ total_visits }}</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+            <div class="card stats-card">
+                <div class="card-header">
+                    Total Reserves
+                </div>
+                <div class="card-body">
+                    <h4>{{ total_reserves }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- عرض إحصائيات المخزون والفواتير -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Inventory Information
+                </div>
+                <div class="card-body">
+                    <p>Total Inventory Items: <strong>{{ total_inventory_items }}</strong></p>
+                    <p>Total Quantity in Stock: <strong>{{ total_quantity_in_stock }}</strong></p>
+                    <p>Total Stock Value: <strong>{{ total_stock_value }} EGP</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Invoice Information
+                </div>
+                <div class="card-body">
+                    <p>Total Invoices: <strong>{{ total_invoices }}</strong></p>
+                    <p>Total Quantity Purchased: <strong>{{ total_quantity_purchased }}</strong></p>
+                    <p>Total Quantity Used: <strong>{{ total_quantity_used }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- عرض تفاصيل المخزون -->
+    <div class="card">
+        <div class="card-header">
+            Inventory Details
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory_details %}
+                    <tr>
+                        <td>{{ item.item_name }}</td>
+                        <td>{{ item.item_quantity }}</td>
+                        <td>{{ item.item_cost }} EGP</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- عرض إحصائيات المدفوعات -->
+    <div class="card">
+        <div class="card-header">
+            Payment Information
+        </div>
+        <div class="card-body">
+            <p>Total Payments: <strong>{{ total_payments }}</strong></p>
+            <p>Total Paid: <strong>{{ total_paid }} EGP</strong></p>
+        </div>
+    </div>
+
+    <!-- عرض الرسوم البيانية -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Inventory Chart
+                </div>
+                <div class="card-body">
+                    <canvas id="inventoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Reserves Chart
+                </div>
+                <div class="card-body">
+                    <canvas id="reservesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسم بياني للحجوزات حسب الفروع والحالة -->
+    <div class="card">
+        <div class="card-header">
+            Reserves by Branch and Status
+        </div>
+        <div class="card-body">
+            <canvas id="reservesBranchChart"></canvas>
+        </div>
+    </div>
+</div>
+<script>
+    // رسم بياني للمخزون
+    var ctx = document.getElementById('inventoryChart').getContext('2d');
+    var inventoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Purchased', 'Total Used', 'In Stock'],
+            datasets: [{
+                label: 'Inventory Data',
+                data: [{{ total_quantity_purchased }}, {{ total_quantity_used }}, {{ total_quantity_in_stock }}],
+                backgroundColor: ['#ffcc66', '#ff6666', '#66cc99'],
+                borderColor: ['#ff9966', '#ff3333', '#339966'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // رسم بياني للحجوزات
+    var ctx2 = document.getElementById('reservesChart').getContext('2d');
+    var reservesChart = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'Pending', 'Cancelled'],
+            datasets: [{
+                label: 'Reserves Data',
+                data: [{{ completed_reserves }}, {{ pending_reserves }}, {{ cancelled_reserves }}],
+                backgroundColor: ['#66cc99', '#ffcc66', '#ff6666'],
+                borderColor: ['#339966', '#ff9966', '#cc3333'],
+                borderWidth: 1
+            }]
+        }
+    });
+// رسم بياني للحجوزات حسب الفروع والحالة
+var ctx3 = document.getElementById('reservesBranchChart').getContext('2d');
+var reservesBranchChart = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+        labels: ['Naser_city', '5th_sattelment', 'EL_Mohandsen'], // استبدل هذه القيم بأسماء الفروع
+        datasets: [
+            {
+                label: 'Completed',
+                data: [{{ completed_reserves_by_branch.Naser_city }}, {{ completed_reserves_by_branch.5th_sattelment }}, {{ completed_reserves_by_branch.EL_Mohandsen }}],
+                backgroundColor: '#66cc99',
+            },
+            {
+                label: 'Pending',
+                data: [{{ pending_reserves_by_branch.Naser_city }}, {{ pending_reserves_by_branch.5th_sattelment }}, {{ pending_reserves_by_branch.EL_Mohandsen }}],
+                backgroundColor: '#ffcc66',
+            },
+            {
+                label: 'Cancelled',
+                data: [{{ cancelled_reserves_by_branch.Naser_city }}, {{ cancelled_reserves_by_branch.5th_sattelment }}, {{ cancelled_reserves_by_branch.EL_Mohandsen }}],
+                backgroundColor: '#ff6666',
+            }
+        ]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+</script>
+
+
+</body>
+</html>
+
+{% endblock %}

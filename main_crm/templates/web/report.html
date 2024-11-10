@@ -1,0 +1,216 @@
+{% extends 'base.html'%}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noura Fouad Clinics CRM - Reports</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .content {
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #343a40;
+            color: white;
+            font-weight: bold;
+        }
+        .chart {
+            padding: 20px;
+            height: 300px;
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .btn-primary {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <style>
+        .sidebar {
+            background-color: #343a40;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: #ffffff;
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+            text-decoration: none;
+        }
+        </style>
+        
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <nav class="col-md-2 d-none d-md-block sidebar">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'dashboard'%}">
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'patients'%}">
+                                    Patients
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="{%url 'Appointments'%}">
+                                    Appointments
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'billing'%}">
+                                    Billing
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'report'%}">
+                                    Reports
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'inventory'%}">
+                                    inventory
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'companies'%}">
+                                    company
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{%url 'settings'%}">
+                                    Settings
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+        
+        
+        
+            <!-- Main Content -->
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <h1 class="h2">Reports</h1>
+                
+                <!-- Patient Statistics -->
+                <div class="card">
+                    <div class="card-header">
+                        Patient Statistics
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <!-- Placeholder for a chart (e.g., bar chart, pie chart) -->
+                            <p class="text-center">[Chart Placeholder: Patient Statistics]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        Appointment Summary
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <!-- Placeholder for a chart (e.g., line chart, pie chart) -->
+                            <p class="text-center">[Chart Placeholder: Appointment Summary]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Summary -->
+                <div class="card">
+                    <div class="card-header">
+                        Billing Summary
+                    </div>
+                    <div class="card-body">
+                        <div class="chart">
+                            <!-- Placeholder for a chart (e.g., bar chart, pie chart) -->
+                            <p class="text-center">[Chart Placeholder: Billing Summary]</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Reports Table -->
+                <div class="card">
+                    <div class="card-header">
+                        Recent Reports
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Report Name</th>
+                                    <th>Date Generated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Monthly Patient Statistics</td>
+                                    <td>2024-09-01</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Weekly Appointment Summary</td>
+                                    <td>2024-08-28</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Annual Billing Report</td>
+                                    <td>2024-08-25</td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-primary">View</a>
+                                        <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                                    </td>
+                                </tr>
+                                <!-- Add more reports as needed -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+{%endblock%}

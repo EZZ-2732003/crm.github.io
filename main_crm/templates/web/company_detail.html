@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Company Details</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+    /* الهوية البصرية الأساسية */
+    body {
+        background: linear-gradient(120deg, #ffffff, #f9e1e7); /* الخلفية المتدرجة */
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    .card {
+        margin-bottom: 20px;
+        border-radius: 10px; /* زوايا دائرية */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+        transition: all 0.3s ease-in-out;
+    }
+
+    .card-header {
+        font-weight: bold;
+        background-color: #f9e1e7; /* استخدام لون الخلفية */
+        color: #b88b4a; /* اللون الذهبي */
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .company-info span {
+        font-weight: bold;
+        color: #b88b4a; /* اللون الذهبي */
+    }
+
+    .btn-primary {
+        background-color: #ff6699;
+        border: none;
+        color: white;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #ff3366;
+    }
+
+    h1 {
+        color: #343a40;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    /* تحسين العرض على الهواتف */
+    @media (max-width: 768px) {
+        .card {
+            padding: 10px;
+        }
+
+        h1 {
+            font-size: 1.5em;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            Company Information
+        </div>
+        <div class="card-body company-info">
+            <h1>{{ company.company_name }}</h1>
+            <p><span>Address</span> {{ company.company_address }}</p>
+            <p><span>Phone</span> {{ company.company_phone }}</p>
+            <p><span>Total Paid</span> {{ company.total_paid }} EGP</p>
+            <p><span>Total Due</span> {{ company.total_due }} EGP</p>
+        </div>
+    </div>
+
+    <!-- عرض المخزون الخاص بالشركة -->
+    <div class="card">
+        <div class="card-header">
+            Inventory Information
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                        <tr>
+                            <td>{{ item.item_name }}</td>
+                            <td>{{ item.item_quantity }}</td>
+                            <td>{{ item.item_price }} EGP</td>
+                            <td>{{ item.item_cost }} EGP</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No inventory items available for this company.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- عرض الفواتير الخاصة بالشركة -->
+    <div class="card">
+        <div class="card-header">
+            Invoice Information
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Purchase Date</th>
+                        <th>Item</th>
+                        <th>Quantity Purchased</th>
+                        <th>Quantity Used</th>
+                        <th>Total Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoice %}
+                        <tr>
+                            <td>{{ inv.purchase_date }}</td>
+                            <td>{{ inv.item.item_name }}</td>
+                            <td>{{ inv.quantity_purchased }}</td>
+                            <td>{{ inv.quantity_used }}</td>
+                            <td>{{ inv.total_cost }} EGP</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">No invoices available for this company.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

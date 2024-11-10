@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <h2>Payment Details</h2>
+  <div class="payment-details">
+    <p><strong>Date:</strong> {{ payment.created_at|date:"Y-m-d" }}</p>
+    <p><strong>Amount:</strong> {{ payment.get_total_amount }} EGP</p>
+    <p><strong>Status:</strong> {{ payment.status }}</p>
+    <p><strong>Method:</strong> {{ payment.method }}</p>
+  </div>
+
+  <h3>Services</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Quantity</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for service in services %}
+      <tr>
+        <td>{{ service.service.name }}</td>
+        <td>{{ service.quantity }}</td>
+        <td>{{ service.price_at_time_of_payment }} EGP</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3">No services found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Products</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inventory in inventories %}
+      <tr>
+        <td>{{ inventory.inventory.item_name }}</td>
+        <td>{{ inventory.quantity }}</td>
+        <td>{{ inventory.price_at_time_of_payment }} EGP</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3">No products found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+
+  <a href="{% url 'payment_list' %}" class="btn btn-secondary">Back to Payments</a>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<!DOCTYPE html>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Company</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<style>
+    /* الهوية البصرية الأساسية */
+    body {
+        background: linear-gradient(120deg, #ffffff, #f9e1e7); /* الخلفية المتدرجة */
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .content {
+        padding: 20px;
+    }
+
+    .form-container {
+        background-color: #ffffff;
+        border-radius: 10px; /* زوايا دائرية */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        text-align: center;
+        color: #343a40;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #b88b4a; /* اللون الذهبي */
+    }
+
+    .btn-primary {
+        background-color: #ff6699;
+        border: none;
+        color: white;
+        border-radius: 8px; /* زوايا دائرية للأزرار */
+        padding: 10px 20px;
+        transition: background-color 0.3s ease;
+        width: 100%;
+    }
+
+    .btn-primary:hover {
+        background-color: #ff3366;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .errorlist {
+        color: red;
+        margin-bottom: 10px;
+    }
+
+    /* تحسين العرض على الهواتف */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 10px;
+        }
+
+        h1 {
+            font-size: 1.5em;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="form-container">
+        <h1>Edit Company</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}

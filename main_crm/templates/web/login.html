@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noura Fouad Clinics CRM - Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* الخلفية العامة */
+        body {
+            background-color: #fff5f8; /* اللون الأبيض الزهري */
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* إعدادات قسم تسجيل الدخول */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .login-card {
+            background-color: #ffffff; /* لون الصندوق */
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* تأثير الهوفر على الصندوق */
+        .login-card:hover {
+            transform: translateY(-5px); /* حركة خفيفة */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15); /* تأثير الظل */
+        }
+
+        .login-card h2 {
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        .form-group input {
+            height: 45px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        /* زر تسجيل الدخول */
+        .btn-primary {
+            background-color: #ffd700; /* زر باللون الذهبي */
+            color: #333;
+            height: 45px;
+            font-size: 1.2em;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #f9a602; /* لون أغمق عند التحويم */
+            color: #fff;
+        }
+
+        .login-footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .login-footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* الفوتر */
+        .footer {
+            background-color: #fff5f8; /* نفس الخلفية الزهرية */
+            color: #333;
+            padding: 20px 0;
+            text-align: center;
+        }
+
+        /* تحسين العرض على الهواتف */
+        @media (max-width: 768px) {
+            .login-card {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .login-card h2 {
+                font-size: 1.8em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="text-center">Noura Fouad Clinics System</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </form>
+            <div class="login-footer mt-3">
+                <p>Don't have an account? <a href="{% url 'register' %}">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Noura Fouad Clinics. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+{% endblock %}

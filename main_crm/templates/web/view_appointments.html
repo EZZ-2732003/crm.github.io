@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noura Fouad Clinics CRM - View Appointment</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Arial', sans-serif;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .patient-info span, .appointment-info span {
+            font-weight: bold;
+        }
+        .btn-primary, .btn-danger {
+            margin-top: 15px;
+        }
+        .badge {
+            font-size: 1em;
+            padding: 0.5em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h1 class="h2">View Appointment Details</h1>
+
+        <!-- Patient Information -->
+        <div class="card">
+            <div class="card-header">
+                Patient Information
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 patient-info">
+                        <p><span>Patient Name:</span> John Doe</p>
+                        <p><span>Patient ID:</span> P12345</p>
+                        <p><span>Phone:</span> (555) 555-5555</p>
+                        <p><span>Email:</span> johndoe@example.com</p>
+                    </div>
+                    <div class="col-md-6 patient-info">
+                        <p><span>Gender:</span> Male</p>
+                        <p><span>Status:</span> <span class="badge badge-success">Active</span></p>
+                        <p><span>Last Visit:</span> 2024-08-10</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointment Information -->
+        <div class="card">
+            <div class="card-header">
+                Appointment Information
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 appointment-info">
+                        <p><span>Appointment Date:</span> 2024-08-15</p>
+                        <p><span>Appointment Time:</span> 10:00 AM</p>
+                        <p><span>Doctor:</span> Dr. Ahmed</p>
+                    </div>
+                    <div class="col-md-6 appointment-info">
+                        <p><span>Status:</span> <span class="badge badge-success">Scheduled</span></p>
+                        <p><span>Room:</span> Room 101</p>
+                    </div>
+                </div>
+                <a href="#" class="btn btn-primary">Edit Appointment</a>
+                <a href="#" class="btn btn-danger">Cancel Appointment</a>
+            </div>
+        </div>
+
+        <!-- Notes Section -->
+        <div class="card">
+            <div class="card-header">
+                Appointment Notes
+            </div>
+            <div class="card-body">
+                <p>No additional notes for this appointment.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

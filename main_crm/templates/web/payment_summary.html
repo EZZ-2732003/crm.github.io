@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card payment-summary">
+        <h2 class="h2">Payment Summary</h2>
+        
+        <h3>Payment ID: {{ payment.id }}</h3>
+        <p>Date: {{ payment.created_at }}</p>
+
+        <h3>Services</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in payment.paymentservice_set.all %}
+                <tr>
+                    <td>{{ service.service.name }}</td>
+                    <td>{{ service.quantity }}</td>
+                    <td>{{ service.price_at_time_of_payment|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No services found for this payment.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Products</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inventory in payment.paymentinventory_set.all %}
+                <tr>
+                    <td>{{ inventory.inventory.item_name }}</td>
+                    <td>{{ inventory.quantity }}</td>
+                    <td>{{ inventory.price_at_time_of_payment|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No products found for this payment.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <h3>Total Services: <span class="total">{{ payment.get_total_service|floatformat:2 }}</span></h3>
+            <h3>Total Products: <span class="total">{{ payment.get_total_products|floatformat:2 }}</span></h3>
+            <h2>Total Payment: <span class="total">{{ payment.get_total_amount|floatformat:2 }}</span></h2>
+        </div>
+        
+        <a href="{% url 'payment_list' %}" class="btn btn-primary">Back to Payment List</a>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+  /* الهوية البصرية الأساسية */
+  .payment-summary {
+      padding: 20px;
+      background-color: #f9e1e7; /* خلفية متدرجة خفيفة */
+      border-radius: 10px; /* زوايا دائرية */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+      margin: 20px 0;
+  }
+
+  .payment-summary h2,
+  .payment-summary h3 {
+      color: #343a40; /* لون النص */
+  }
+
+  .table {
+      width: 100%;
+      margin-bottom: 1rem;
+      background-color: transparent;
+      border-collapse: collapse; /* دمج الحدود */
+  }
+
+  .table-striped tbody tr {
+      background-color: white; /* خلفية بيضاء للصفوف */
+      border-radius: 8px; /* زوايا دائرية للصفوف */
+      transition: transform 0.2s ease; /* تأثير التحويم */
+  }
+
+  .table-striped tbody tr:hover {
+      transform: scale(1.02); /* تكبير الصف عند التحويم */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* ظل إضافي عند التحويم */
+  }
+
+  .table-bordered {
+      border: 1px solid #dee2e6; /* حدود للجدول */
+  }
+
+  .table-bordered th,
+  .table-bordered td {
+      border: 1px solid #dee2e6; /* حدود للخلايا */
+      padding: 10px; /* فراغ داخل الخلايا */
+      text-align: left; /* محاذاة نص */
+  }
+
+  .totals {
+      margin-top: 20px;
+      font-weight: bold; /* نص عريض */
+      color: #b88b4a; /* لون مميز للإجماليات */
+  }
+
+  .total {
+      color: #28a745; /* لون مختلف للإجماليات */
+      font-weight: bold; /* نص عريض للإجماليات */
+  }
+
+  .btn-primary {
+      background-color: #ff6699; /* لون الزر */
+      border: none; /* إزالة الحدود */
+  }
+
+  .btn-primary:hover {
+      background-color: #ff3366; /* لون الزر عند التحويم */
+      border: none; /* إزالة الحدود عند التحويم */
+  }
+
+  /* تصميم استجابة لأجهزة الهواتف المحمولة */
+  @media (max-width: 768px) {
+      .payment-summary {
+          padding: 15px; /* تقليل الحشو على الهواتف */
+      }
+
+      .table {
+          font-size: 14px; /* تقليل حجم الخط في الجداول */
+      }
+
+      .totals {
+          font-size: 16px; /* حجم خط أكبر للإجماليات */
+      }
+
+      .total {
+          font-size: 18px; /* حجم خط أكبر للإجماليات */
+      }
+
+      .btn-primary {
+          width: 100%; /* جعل الزر يتوسع لملء عرض الشاشة */
+          padding: 12px; /* زيادة الحشو للزر */
+      }
+  }
+</style>

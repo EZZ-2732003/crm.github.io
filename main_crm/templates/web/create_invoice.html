@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <h2>Create Invoice</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}  <!-- Using Crispy Forms for the Payment form -->
+
+    <!-- عرض الحقول الإضافية عند اختيار الدفع الآجل -->
+    <div id="deferred-payment-fields" style="display: none;">
+      <label for="due-date">Add Payment Schedule:</label>
+      <input type="date" id="due-date" class="form-control mb-2">
+      <input type="number" id="payment-amount" class="form-control mb-2" placeholder="Payment Amount">
+      <button type="button" id="add-payment" class="btn btn-secondary mb-3">Add Payment</button>
+
+      <ul id="payment-list" class="list-group mb-3"></ul>
+
+      <!-- حقول مخفية لإرسال مواعيد وقيم المدفوعات -->
+      <input type="hidden" name="due_dates" id="id_due_dates">
+      <input type="hidden" name="payments" id="id_payments">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit Invoice</button>
+  </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentMethodSelect = document.querySelector('select[name="payment_method"]');
+        const deferredPaymentFields = document.getElementById('deferred-payment-fields');
+        
+        // إظهار/إخفاء حقول الدفع الآجل بناءً على اختيار طريقة الدفع
+        paymentMethodSelect.addEventListener('change', function () {
+            if (this.value === 'Deferred') {
+                deferredPaymentFields.style.display = 'block';
+            } else {
+                deferredPaymentFields.style.display = 'none';
+            }
+        });
+
+        const dueDatesInput = document.getElementById('id_due_dates');
+        const paymentsInput = document.getElementById('id_payments');
+        const addPaymentButton = document.getElementById('add-payment');
+        const paymentList = document.getElementById('payment-list');
+        
+        const payments = [];
+        
+        // إضافة دفعة جديدة إلى القائمة
+        addPaymentButton.addEventListener('click', function () {
+            const dueDate = document.getElementById('due-date').value;
+            const paymentAmount = document.getElementById('payment-amount').value;
+
+            if (dueDate && paymentAmount) {
+                payments.push({ due_date: dueDate, amount: paymentAmount });
+
+                // تحديث قائمة المدفوعات في الواجهة
+                const li = document.createElement('li');
+                li.classList.add('list-group-item');
+                li.textContent = `Due date: ${dueDate}, Amount: ${paymentAmount}`;
+                paymentList.appendChild(li);
+
+                // تحديث الحقول المخفية بالقيم
+                dueDatesInput.value = JSON.stringify(payments.map(payment => payment.due_date));
+                paymentsInput.value = JSON.stringify(payments.map(payment => payment.amount));
+
+                // مسح الحقول بعد الإضافة
+                document.getElementById('due-date').value = '';
+                document.getElementById('payment-amount').value = '';
+            }
+        });
+    });
+  </script>
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <h2>Edit Payment</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    
+    <!-- Payment form fields -->
+    <fieldset>
+      <legend>Payment Details</legend>
+      {{ payment_form|crispy }}
+    </fieldset>
+
+    <!-- Payment services formset -->
+    <fieldset>
+      <legend>Services</legend>
+      {{ payment_service_formset.management_form }}
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in payment_service_formset %}
+          <tr>
+            <td>{{ form.service|as_crispy_field }}</td>
+            <td>{{ form.quantity|as_crispy_field }}</td>
+            <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
+            <td>{{ form.price_at_time_of_payment.value|floatformat:2|add:form.quantity.value|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-secondary" id="add-service">Add Another Service</button>
+    </fieldset>
+    
+    <!-- Payment products formset -->
+    <fieldset>
+      <legend>Products</legend>
+      {{ payment_inventory_formset.management_form }}
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in payment_inventory_formset %}
+          <tr>
+            <td>{{ form.inventory|as_crispy_field }}</td>
+            <td>{{ form.quantity|as_crispy_field }}</td>
+            <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
+            <td>{{ form.price_at_time_of_payment.value|floatformat:2|add:form.quantity.value|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-secondary" id="add-product">Add Another Product</button>
+    </fieldset>
+    
+    <div class="total-section">
+      <h3>Total Amount: {{ payment.get_total_amount }}</h3>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Payment</button>
+  </form>
+
+  <script>
+    document.getElementById('add-service').addEventListener('click', function() {
+      const formIdx = document.querySelectorAll('#id_services-TOTAL_FORMS')[0];
+      const formCount = parseInt(formIdx.value);
+      const newForm = document.querySelectorAll('tbody tr')[0].cloneNode(true);
+      const newFormHTML = newForm.innerHTML.replace(/services-\d+/g, `services-${formCount}`);
+      newForm.innerHTML = newFormHTML;
+      document.querySelector('fieldset:nth-of-type(2) tbody').appendChild(newForm);
+      formIdx.value = formCount + 1;
+    });
+
+    document.getElementById('add-product').addEventListener('click', function() {
+      const formIdx = document.querySelectorAll('#id_inventory-TOTAL_FORMS')[0];
+      const formCount = parseInt(formIdx.value);
+      const newForm = document.querySelectorAll('tbody tr')[0].cloneNode(true);
+      const newFormHTML = newForm.innerHTML.replace(/inventory-\d+/g, `inventory-${formCount}`);
+      newForm.innerHTML = newFormHTML;
+      document.querySelector('fieldset:nth-of-type(3) tbody').appendChild(newForm);
+      formIdx.value = formCount + 1;
+    });
+  </script>
+{% endblock %}

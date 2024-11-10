@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noura Fouad Clinics CRM - Branches</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        /* إعدادات عامة */
+        body {
+            background: linear-gradient(120deg, #ffffff, #f9e1e7);
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        h1 {
+            color: #b88b4a;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .row {
+            margin-bottom: 20px;
+        }
+
+        /* إعدادات صناديق الفروع */
+        .branch-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: 0.3s ease;
+            text-align: center;
+        }
+
+        .branch-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .branch-box i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #b88b4a;
+        }
+
+        .branch-box h5 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #b88b4a;
+        }
+
+        /* تخصيص ألوان لكل فرع */
+        .box-mohandsen {
+            background: #f9e1e7;
+        }
+
+        .box-sattelment {
+            background: #fbe4e8;
+        }
+
+        .box-naser-city {
+            background: #f9e1e7;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1 class="text-center">Branches Information</h1>
+
+        <div class="row mt-4">
+            <!-- فرع المهندسين -->
+            <div class="col-md-4 col-sm-12">
+                <div class="branch-box box-mohandsen">
+                    <a href="{% url 'ElMohandseen_branch' %}">
+                    <i class="fas fa-clinic-medical"></i>
+                    <h5>EL Mohandsen Branch</h5>
+                    
+                </a>
+                </div>
+            </div>
+
+            <!-- فرع التجمع الخامس -->
+            <div class="col-md-4 col-sm-12">
+                <div class="branch-box box-sattelment">
+                    <a href="{% url 'fifeth_sattelmant_branch' %}">
+                    <i class="fas fa-clinic-medical"></i>
+                    <h5>5th Settlement Branch</h5>
+                   
+                    </a>
+                </div>
+            </div>
+
+            <!-- فرع مدينة نصر -->
+            <div class="col-md-4 col-sm-12">
+                <div class="branch-box box-naser-city">
+                    <a href="{% url 'naser_city_branch' %}">
+                    <i class="fas fa-clinic-medical"></i>
+                    <h5>Naser City Branch</h5>
+                    
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
+{% endblock %}
