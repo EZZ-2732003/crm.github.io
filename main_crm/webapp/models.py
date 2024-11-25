@@ -87,6 +87,7 @@ class Companies(models.Model):
     def get_inventory(self):
         """جلب جميع العناصر التي تم استيرادها من هذه الشركة"""
         return self.inventory_items.all()
+    
 
 
 
@@ -164,6 +165,7 @@ class Payment(models.Model):
     def get_total_amount(self):
         """إجمالي المبلغ يشمل الخدمات والمنتجات"""
         return self.get_total_service() + self.get_total_products()
+    
 
 
 
@@ -269,6 +271,8 @@ class Invoice(models.Model):
             self.due_dates = []
         self.due_dates.append(date)
         self.save()
+
+        
 
 
 class Medical_History(models.Model):
