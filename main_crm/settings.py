@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
 SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')  # Change this to a secure value in production
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 # ALLOWED_HOSTS to include dynamic environment settings
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') or [
