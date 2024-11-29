@@ -26,7 +26,7 @@ CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') or [
 
 # Application definition
 INSTALLED_APPS = [
-    'whitenoise.runserver_nostatic'
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
