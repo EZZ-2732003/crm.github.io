@@ -230,6 +230,18 @@ def update_appointment_status(request, appointment_id, status):
     record = get_object_or_404(Reserve, id=appointment_id)
     record.status = status
     record.save()
+
+    # إذا كانت الحالة 'completed' وكان المريض غير موجود في قاعدة بيانات المرضى
+    if status == 'completed' and not patient.objects.filter(name=record.patient_name).exists():
+        patient.objects.create(
+            name=record.patient_name,
+            phone=record.phone,
+            address='Default Address',  # يمكنك تحديث هذا إذا كان لديك عنوان محدد
+            create_at=record.create_at,
+            date_of_birth=None,  # قم بتحديثه إذا كان لديك تاريخ ميلاد للمريض
+            last_visit=None  # قم بتحديثه إذا كان لديك تاريخ الزيارة الأخير
+        )
+    
     return redirect('Appointments')
 
 
