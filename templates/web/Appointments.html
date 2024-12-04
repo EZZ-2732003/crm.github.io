@@ -169,6 +169,7 @@
                     <thead>
                         <tr>
                             <th>Patient Name</th>
+                            <th>Old or New</th>
                             <th>Phone</th>
                             <th>Date</th>
                             <th>Time</th>
@@ -181,7 +182,8 @@
                     <tbody>
                         {% for record in records %}
                         <tr>
-                            <td data-label="Patient Name">{{ record.name }}</td>
+                            <td data-label="Patient Name">{{ record.patient_name }}</td>
+                            <td data-label="old or new">{{ record.type }}</td>
                             <td data-label="Phone">{{ record.phone }}</td>
                             <td data-label="Date">{{ record.date }}</td>
                             <td data-label="Time">{{ record.time }}</td>

@@ -8,92 +8,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noura Fouad Clinics CRM</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
+    <style>/* General Reset */
         html, body {
             height: 100%;
             margin: 0;
-            background-color: #fff5f8; /* اللون الأبيض الزهري للخلفية العامة */
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fff6f1, #cd8e85); /* خلفية متدرجة بالألوان الوردية والذهبية */
+            color: #333; /* نص باللون الداكن */
+            font-family: 'Poppins', sans-serif; /* خط الموقع */
             display: flex;
             flex-direction: column;
         }
-
+        
+        /* Navbar */
         .navbar {
             margin-bottom: 30px;
+            background-color: #fbe4e8; /* لون خلفية فاتح للبار */
         }
-
-        /* قسم البطل */
+        
+        /* Hero Section */
         .hero-section {
-            background-color: #fff5f8; /* اللون الأبيض الزهري للخلفية */
-            color: #333; /* نص باللون الداكن */
+            background-color: #fff5f8; /* خلفية بيضاء زهري */
             padding: 50px 0;
             text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-
+        
         .hero-section h1 {
-            font-size: 2.5em; /* حجم مناسب للعرض */
+            font-size: 2.5em;
             font-weight: bold;
+            color: #8A6B55; /* لون داكن للأكسر */
         }
-
+        
         .hero-section a {
             background-color: #ffd700; /* زر باللون الذهبي */
-            color: #333;
+            color: #8A6B55; /* نص باللون الداكن */
             font-weight: bold;
             border-radius: 8px;
-            padding: 10px 20px;
+            padding: 12px 24px;
             transition: background-color 0.3s ease;
+            text-decoration: none; /* إزالة الخط أسفل النص */
         }
-
+        
         .hero-section a:hover {
             background-color: #f9a602; /* لون أغمق عند التحويم */
             color: #fff;
         }
-
-        /* قسم الميزات */
+        
+        /* Feature Section */
         .feature {
-            background-color: #fff5f8; /* نفس اللون الأبيض الزهري لقسم الميزات */
+            background-color: #f9e1e7; /* خلفية بيضاء زهري فاتحة */
             padding: 40px 0;
         }
-
+        
         .feature h3 {
-            color: #333; /* لون النص الداكن */
+            color: #8A6B55; /* لون داكن للأكسر */
             font-weight: bold;
+            margin-bottom: 15px;
         }
-
+        
         .feature p {
-            color: #555; /* لون نص أغمق قليلًا */
+            color: #555; /* لون النص أغمق قليلاً */
         }
-
+        
         /* تحسين عرض الميزات على الهواتف */
         @media (max-width: 768px) {
             .feature .col-md-4 {
                 margin-bottom: 30px;
                 text-align: center;
             }
+        
+            .hero-section h1 {
+                font-size: 2em; /* تصغير حجم العنوان للعرض المناسب على الهواتف */
+            }
+        
+            .hero-section a {
+                padding: 10px 18px; /* تقليل حجم الزر للعرض المناسب على الهواتف */
+            }
         }
-
+        
+        /* Container */
         .container {
             flex: 1; /* المحتوى الرئيسي يحتل أكبر مساحة ممكنة */
         }
-
-        /* الفوتر */
+        
+        /* Footer */
         .footer {
-            background-color: #fff5f8; /* نفس اللون الأبيض الزهري للفوتر */
-            color: #333; /* لون النص الداكن */
+            background-color: #fbe4e8; /* لون خلفية فاتح للفوتر */
+            color: #8A6B55; /* نص داكن */
             padding: 20px 0;
             text-align: center;
             margin-top: auto; /* الفوتر دائمًا في الأسفل */
         }
-
+        
         .footer p {
             margin: 0;
         }
+        
     </style>
 </head>
 <body>

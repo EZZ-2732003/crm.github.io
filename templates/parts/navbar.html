@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  {% load static %}
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,89 +10,162 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <style>
-      /* تعديل شريط التنقل */
-      .navbar {
-          background: linear-gradient(135deg, #ffffff, #f9e1e7); /* خلفية متدرجة بين الأبيض والوردي */
-          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* إضافة ظل */
-          padding: 15px 20px; /* زيادة البعد الداخلي */
-      }
+        /* General Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+        }
 
-      .navbar-brand img {
-          max-width: 100px; /* أو أي حجم يناسبك */
-          height: auto;
-          transition: transform 0.3s ease; /* تأثير التحرك */
-      }
+        /* Navbar customization with gradient, shadow, and animations */
+        .navbar {
+            background: linear-gradient(135deg, #fff6f1, #cd8e85); /* Rose gold gradient */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            transition: background 0.3s ease;
+        }
 
-      .navbar-brand {
-          font-size: 1.7rem; /* تكبير اسم العلامة التجارية */
-          font-weight: bold;
-          color: #b88b4a; /* لون ذهبي */
-          letter-spacing: 1px;
-          text-transform: uppercase; /* تكبير الأحرف */
-          flex: 1; /* لجعل الشعار في منتصف الناف بار */
-          text-align: center; /* لمركزية الشعار */
-      }
+        .navbar-brand {
+            font-size: 1.7rem;
+            font-weight: bold;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            flex: 1;
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
 
-      .navbar-nav {
-          text-align: center; /* لمركزية عناصر القائمة */
-          flex: 1; /* استخدام المساحة المتاحة */
-      }
-  
-      .navbar-nav .nav-item .nav-link {
-          color: #b88b4a; /* لون ذهبي */
-          font-weight: 500;
-          padding: 10px 20px;
-          transition: all 0.3s ease; /* تأثير سلس عند التمرير */
-          border-radius: 10px; /* زوايا دائرية */
-      }
-  
-      .navbar-nav .nav-item .nav-link:hover {
-          background-color: rgba(255, 223, 186, 0.5); /* لون خلفية عند التمرير */
-          color: #b88b4a; /* ذهبي */
-      }
-  
-      .navbar .nav-link.logout:hover {
-          background-color: #d94e5c;
-      }
-  
-      /* إضافة أيقونات بجانب النص */
-      .navbar-nav .nav-item .nav-link i {
-          margin-right: 8px;
-          font-size: 1rem;
-          color: #b88b4a; /* لون الأيقونات ذهبي */
-          transition: color 0.3s ease; /* تأثير سلس عند تغيير لون الأيقونة */
-      }
-  
-      /* تعديل لون الأيقونة عند التمرير */
-      .navbar-nav .nav-item .nav-link:hover i {
-          color: #d4af37; /* لون ذهبي فاتح عند التمرير */
-      }
-  
-      /* تعديل زر القائمة في الأجهزة الصغيرة */
-      .navbar-toggler {
-          border: none;
-          outline: none;
-      }
-  
-      .navbar-toggler-icon {
-          background-color: #b88b4a; /* لون ذهبي */
-          border-radius: 5px;
-          padding: 5px;
-      }
+        .navbar-brand img {
+            max-width: 100px;
+            height: auto;
+            transition: transform 0.3s ease;
+        }
 
-      @media (max-width: 768px) {
-          .navbar-brand {
-              margin: 0 auto; /* يجعل الشعار في المنتصف */
-              text-align: center; /* مركزية الشعار */
-              flex-basis: 100%; /* استخدام المساحة بالكامل */
-          }
+        .navbar-nav {
+            text-align: center;
+            flex: 1;
+        }
 
-          .navbar-collapse {
-              text-align: center; /* مركزية عناصر القائمة */
-          }
-      }
-  </style>
-  
+        .navbar-nav .nav-item {
+            position: relative; /* For absolute positioning of icon */
+        }
+
+        .navbar-nav .nav-item .nav-link {
+            color: #ffffff;
+            font-weight: 500;
+            padding: 8px; /* Space around the text and icon */
+            transition: all 0.3s ease;
+            border: none; /* Remove border */
+            background: none; /* Remove any background */
+            border-radius: 0; /* Remove rounding */
+            box-shadow: none; /* Ensure no shadow creates a frame */
+            display: flex; /* Use flex for easy alignment */
+            flex-direction: column; /* Stack icon above text */
+            align-items: center; /* Center the icon and text */
+        }
+
+        .navbar-nav .nav-item .nav-link:hover {
+            color: #000000; /* Change text color on hover */
+            transform: scale(1.1); /* Scale the entire link */
+        }
+
+        /* Icons */
+        .navbar-nav .nav-item .nav-link i {
+            font-size: 1.5rem; /* Slightly larger icons */
+            color: #A99286; /* Soft accent for icons */
+            transition: color 0.3s ease, transform 0.3s ease; /* Transition for color and transform */
+        }
+
+        .navbar-nav .nav-item .nav-link:hover i {
+            color: #8A6B55; /* Change icon color on hover */
+            transform: scale(1.1); /* Scale icon on hover */
+        }
+
+        .navbar-toggler {
+            border: 2px solid #A99286; /* لون متناسق مع التصميم */
+            padding: 8px; /* تحسين المساحة حول الأيقونة */
+            border-radius: 5px; /* حواف مستديرة */
+            outline: none; /* إزالة الحدود الافتراضية */
+            transition: all 0.3s ease; /* إضافة حركة للتفاعل */
+        }
+
+        .navbar-toggler:hover {
+            background-color: #cd8e85; /* تأثير عند التمرير */
+            border-color: #8A6B55; /* لون مختلف لتوضيح الحدود */
+        }
+
+        .navbar-toggler-icon {
+            width: 30px;
+            height: 3px;
+            background-color: #A99286;
+            border-radius: 3px;
+            display: block;
+            margin: 5px auto; /* محاذاة الأشرطة أفقياً */
+            position: relative;
+        }
+
+        /* Animation for Navbar and Links */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile view adjustments */
+    @media (max-width: 768px) {
+        .navbar-brand {
+            margin: 0 auto;
+            text-align: center;
+            flex-basis: 100%;
+        }
+
+        .navbar-collapse {
+            text-align: center;
+        }
+
+        .navbar-toggler {
+            display: block; /* تأكد من عرض الزر */
+            background-color: #ffffff; /* لون خلفية الزر */
+            border: 2px solid #A99286; /* لون الإطار */
+            border-radius: 5px; /* حواف مستديرة */
+            padding: 8px; /* تحسين المساحة حول الأيقونة */
+            transition: all 0.3s ease; /* حركة للتفاعل */
+        }
+
+        .navbar-toggler:hover {
+            background-color: #cd8e85; /* لون مميز عند التمرير */
+            border-color: #8A6B55; /* لون مختلف للإطار */
+        }
+
+        .navbar-toggler-icon {
+            display: block; /* تأكد من عرض الأيقونة */
+            width: 30px;
+            height: 3px;
+            background-color: #A99286; /* لون واضح للأشرطة */
+            border-radius: 3px;
+            margin: 5px auto; /* محاذاة أفقية للأشرطة */
+            position: relative;
+        }
+
+        .navbar-toggler-icon::before,
+        .navbar-toggler-icon::after {
+            content: "";
+            display: block;
+            width: 30px;
+            height: 3px;
+            background-color: #A99286;
+            border-radius: 3px;
+            margin: 5px 0;
+        }
+    }
+    </style>
 </head>
 
 <body>
@@ -128,10 +201,10 @@
                     <a class="nav-link" href="{% url 'inventory' %}"><i class="fas fa-boxes"></i> Inventory</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{%url 'statistics'%}"><i class="fas fa-chart-line"></i> Statistics</a>
+                    <a class="nav-link" href="{% url 'statistics' %}"><i class="fas fa-chart-line"></i> Statistics</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{%url 'user_activity'%}"><i class="fas fa-user-md"></i> Staff</a>
+                    <a class="nav-link" href="{% url 'user_activity' %}"><i class="fas fa-user-md"></i> Staff</a>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'logout' %}" class="nav-link logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -145,16 +218,13 @@
         </div>
     </nav>
 
-    <!-- محتوى الصفحة -->
     <div class="container">
         {% block content %}
         {% endblock %}
     </div>
 
-    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
-
 </html>

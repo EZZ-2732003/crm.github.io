@@ -13,16 +13,10 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')  # Change this t
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 # ALLOWED_HOSTS to include dynamic environment settings
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') or [
-    'testnoura-bxbrhtcaggfggweb.canadacentral-01.azurewebsites.net',
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = ['*']
 
-# CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') or [
-    'https://testnoura-bxbrhtcaggfggweb.canadacentral-01.azurewebsites.net',
-]
+
+
 
 # Application definition
 INSTALLED_APPS = [

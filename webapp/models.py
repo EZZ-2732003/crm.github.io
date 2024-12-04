@@ -51,21 +51,51 @@ class Reserve(models.Model):
         ('Naser_city', 'Naser_city'),
     ]
     SERVICE_CHOICES = [
-        ('Service', 'Service'),
+        
         ('Consultation', 'Consultation'),
         ('Retouch', 'Retouch'),
+        
+            ('Retouch: filler_nose', 'Retouch: Filler Nose'),
+            ('Retouch: filler_lip', 'Retouch: Filler Lip'),
+            ('Retouch: botox', 'Retouch: Botox'),
+            
+            ('botox', 'Botox'),
+            ('filler_face', 'Filler Face'),
+            ('filler_nose', 'Filler Nose'),
+            ('filler_lip', 'Filler Lip'),
+            ('skin_booster_syringe', 'Skin Booster Syringe'),
+            ('skin_booster_injection', 'Skin Booster Injection'),
+            ('dissolving_filler', 'Dissolving Filler'),
+            ('dermapen', 'Dermapen'),
+            ('plasmage', 'Plasmage'),
+            ('other','Other'),
     ]
-    name = models.ForeignKey(patient, on_delete=models.CASCADE)
+    TYPE_CHOICES =[
+        ('old','old'),
+        ('new','new'),
+    ]
+    patient_name = models.CharField(max_length=100)
     
-    phone = models.IntegerField()
+    phone = models.CharField(max_length=100)
+    type= models.CharField(max_length=100,choices=TYPE_CHOICES,default='old or new')
     date = models.DateField()
     time = models.TimeField()
-    service=models.CharField(max_length=50,choices=SERVICE_CHOICES,default='Service type' )
+    service = models.CharField(max_length=100,choices=SERVICE_CHOICES,default='service')
+   
     create_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     Branch=models.CharField(max_length=50,choices=BRANCH_CHOICES,default='Branch' )
     def __str__(self):
-        return str(self.name)
+        return str(self.patient_name)
+    
+    def add_phone(self, new_phone):
+        """إضافة رقم جديد إذا لم يكن موجودًا بالفعل."""
+        existing_numbers = self.phone.split(", ")  # تفكيك الأرقام الحالية
+        if new_phone not in existing_numbers:
+            existing_numbers.append(new_phone)
+            self.phone = ", ".join(existing_numbers)  # إعادة تجميع الأرقام
+            self.save()
+
     class Meta :
             ordering = ['-create_at']
 

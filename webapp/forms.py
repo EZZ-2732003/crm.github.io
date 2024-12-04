@@ -34,38 +34,39 @@ class patient_form_edit(forms.ModelForm):
 
 
 
+from django import forms
+from datetime import datetime, timedelta
+
 class ReserveForm(forms.ModelForm):
     patient_name = forms.CharField(max_length=100, label='Patient Name')
+    service_details = forms.MultipleChoiceField(
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        choices=[],
+        label='Service Details',
+    )
+
+    # خيارات التواريخ
+    DATE_CHOICES = [
+        (datetime.now().date() + timedelta(days=i), (datetime.now().date() + timedelta(days=i)).strftime('%Y-%m-%d'))
+        for i in range(0, 30)  # قائمة تواريخ لـ 30 يومًا من اليوم
+    ]
+    # خيارات الأوقات
+    TIME_CHOICES = [
+        (f"{hour:02d}:{minute:02d}", f"{hour:02d}:{minute:02d}")
+        for hour in range(0, 24)  # ساعات العمل من 9 صباحًا إلى 5 مساءً
+        for minute in (0, 30)  # نصف ساعة بين كل خيار
+    ]
+
+    date = forms.ChoiceField(choices=DATE_CHOICES, label='Date')  # قائمة منسدلة للتاريخ
+    time = forms.ChoiceField(choices=TIME_CHOICES, label='Time')  # قائمة منسدلة للوقت
 
     class Meta:
         model = Reserve
-        fields = ['patient_name', 'phone', 'date', 'time', 'service' ,'Branch']
+        fields = ['patient_name', 'phone', 'type', 'date', 'time', 'service', 'Branch','service_details']
+    
+ 
 
-    def save(self, commit=True):
-        
-        patient_name = self.cleaned_data.get('patient_name')
-        
-        phone = self.cleaned_data.get('phone')  
-
-        
-        patient_instance, created = patient.objects.get_or_create(
-            name=patient_name, 
-            defaults={'phone': phone}  
-        )
-
-      
-        if not created and patient_instance.phone != phone:
-            patient_instance.phone = phone
-            patient_instance.save()
-
-        
-        reserve_instance = super(ReserveForm, self).save(commit=False)
-        reserve_instance.name = patient_instance
-
-        if commit:
-            reserve_instance.save()
-
-        return reserve_instance
 
 
         

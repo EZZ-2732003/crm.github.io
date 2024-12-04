@@ -26,6 +26,14 @@
         .btn-primary {
             margin-top: 15px;
         }
+        #id_service_details label {
+            display: block;
+            margin: 5px 0;
+        }
+        
+        #id_service_details input {
+            margin-right: 10px;
+        }
     </style>
 </head>
 
@@ -37,11 +45,12 @@
 
                     <!-- Appointment Information -->
                     <h4>Appointment Information</h4>
-                <form = method='POST'>
+                    <form method="POST">
+
                         {% csrf_token %}
                         {{ form|crispy }}
         
-
+                        
                     <!-- Submit Button -->
                     <button type="submit" class="btn btn-primary">Schedule Appointment</button>
                 </form>
@@ -52,7 +61,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+    
 
 </html>
 {%endblock%}

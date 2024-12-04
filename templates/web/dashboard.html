@@ -12,110 +12,208 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
 
     <style>
-        /* الخلفية */
-        body {
-            background: linear-gradient(120deg, #ffffff, #f9e1e7); /* تدرج بين الأبيض والوردي */
+        /* General Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             font-family: 'Poppins', sans-serif;
+        }
+
+        /* Background */
+        body {
+            background: linear-gradient(135deg, #fff6f1, #cd8e85); /* Rose gold gradient */
             color: #333;
         }
 
-        /* إعدادات عامة */
+        /* General Settings */
         .container {
             padding: 20px;
         }
 
         h1 {
-            color: #b88b4a; /* لون ذهبي */
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
+        color: #8A6B55; /* Darker accent color */
+        font-weight: bold;
+        margin-bottom: 30px;
+        text-align: center; /* Center text */
+        position: relative; /* Position for shadow and outline */
+        animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2), /* Main shadow */
+                     0 0 10px rgba(255, 255, 255, 0.6); /* Outline effect */
+    }
 
+    /* Keyframes for fade-in animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0; /* Start transparent */
+            transform: translateY(-20px); /* Slide up */
+        }
+        to {
+            opacity: 1; /* Fully visible */
+            transform: translateY(0); /* Move back to original position */
+        }
+    }
         .row {
             margin-bottom: 20px;
         }
 
-        /* إعدادات الصناديق */
+        /* Link styles to remove blue underline */
+        a {
+            text-decoration: none; /* Remove underline */
+            color: inherit; /* Use inherited color */
+        }
+
+        /* Remove blue outline on hover and focus */
+        a:hover,
+        a:focus {
+            outline: none; /* Remove the blue outline */
+            text-decoration: none; /* Ensure underline is removed on hover */
+        }
+
+        /* Box Settings */
         .icon-box {
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background: #fff;
+            background: #ffffff; /* White background for boxes */
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            transition: 0.3s ease;
-            text-align: center;
+            position: relative; /* Necessary for glow effect */
+            overflow: hidden; /* Prevent overflow */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transition for scaling and shadow */
         }
 
-        .icon-box:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+        /* Luminous line effect */
+        .icon-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px; /* Match border radius */
+            border: 4px solid transparent; /* Invisible border for size */
+            animation: luminous 1.5s linear infinite; /* Animation for luminous line */
+            z-index: 0; /* Behind the content */
+        }
+
+        .icon-box:hover::before {
+            border-color: rgba(255, 255, 255, 1); /* White border on hover */
+            animation: luminous 1.5s linear infinite; /* Start animation */
+        }
+
+        /* Keyframe for Traveling Light Effect */
+        @keyframes luminous {
+            0% {
+                clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);
+            }
+            25% {
+                clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+            }
+            50% {
+                clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+            }
+            75% {
+                clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
+            }
+            100% {
+                clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);
+            }
         }
 
         .icon-box i {
             font-size: 2.5rem;
             margin-bottom: 15px;
-            color: #b88b4a; /* لون ذهبي */
+            color: #A99286; /* Soft accent color */
+            transition: color 0.3s ease;
+            z-index: 1; /* Above the glow */
+        }
+
+        .icon-box:hover i {
+            color: #8A6B55; /* Darker color on hover */
         }
 
         .icon-box h5 {
             font-size: 1.2rem;
             font-weight: bold;
-            color: #b88b4a; /* لون ذهبي */
+            color: #8A6B55; /* Darker accent color */
+            z-index: 1; /* Above the glow */
         }
 
-        .box-patients, .box-billing, .box-companies, .box-inventory, .box-statistics, .box-staff, .box-price-list, .box-branches {
-            background: #f9e1e7; /* خلفية وردية فاتحة */
+        /* Box Backgrounds */
+        .box-patients,
+        .box-billing,
+        .box-companies,
+        .box-statistics,
+        .box-staff {
+            background: #f9e1e7; /* Light pink background */
         }
 
-        .box-appointments, .box-invoice {
-            background: #fbe4e8; /* خلفية وردية فاتحة */
+        .box-appointments,
+        .box-invoice,
+        .box-inventory,
+        .box-branches,
+        .box-price-list {
+            background: #fbe4e8; /* Light pink background */
+        }
+
+        /* Pop effect on hover */
+        .icon-box:hover {
+            transform: scale(1.05); /* Slightly larger on hover */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
         }
 
         /* Footer styling */
         footer {
             text-align: center;
             margin-top: 30px;
-            color: #b88b4a; /* لون ذهبي */
+            color: #8A6B55; /* Darker accent color */
         }
 
         footer a {
-            color: #b88b4a; /* لون ذهبي */
+            color: #8A6B55; /* Darker accent color */
         }
 
-        /* تحسين العرض على الشاشات الصغيرة */
+        //* Responsive adjustments */
         @media (max-width: 768px) {
             .icon-box {
                 padding: 20px;
             }
-
+        
             .icon-box i {
                 font-size: 2rem;
             }
-
+        
             .icon-box h5 {
                 font-size: 1rem;
             }
-
+        
             .row {
                 margin-bottom: 15px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px; /* المسافة بين الصناديق */
             }
         }
-
+        
         @media (max-width: 576px) {
             .icon-box {
                 padding: 15px;
             }
-
+        
             .icon-box i {
                 font-size: 1.8rem;
             }
-
+        
             .icon-box h5 {
                 font-size: 0.9rem;
             }
-        }
+        
+            .row {
+                gap: 10px; /* تقليل المسافة بين الصناديق في الهواتف الصغيرة */
+            }
+        
     </style>
 
 </head>
