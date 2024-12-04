@@ -15,7 +15,9 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 # ALLOWED_HOSTS to include dynamic environment settings
 ALLOWED_HOSTS = ['*']
 
-
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') or [
+    'https://testnoura-bxbrhtcaggfggweb.canadacentral-01.azurewebsites.net',
+]
 
 
 # Application definition
