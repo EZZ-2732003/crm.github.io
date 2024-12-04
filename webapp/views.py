@@ -135,7 +135,7 @@ def view_patient(request, record_id):
     medical_history = Medical_History.objects.filter(patient=patient_record)
 
     # الحجوزات
-    reservations = Reserve.objects.filter(name=patient_record)
+    reservations = Reserve.objects.filter(patient_name=patient_record)
 
     # الفواتير
     payments = Payment.objects.filter(patient=patient_record)
