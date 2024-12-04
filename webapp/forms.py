@@ -53,7 +53,8 @@ class ReserveForm(forms.ModelForm):
     time = forms.CharField(
         widget=forms.TextInput(attrs={
             'class': 'form-control flatpickr-time',
-            'placeholder': 'Select time (e.g., 10:30 AM)'
+            'placeholder': 'Select time (e.g., 10:30 AM)',
+            'style': 'height: 10px;'
         }),
         label='Time'
     )
