@@ -193,6 +193,16 @@ def Appointments(request):
     else:
         records = Reserve.objects.all()
 
+    records = Reserve.objects.all()
+    for record in records:
+        if isinstance(record.time, str):  # تحقق من أن الوقت مخزن كـ CharField
+            # إزالة أي أجزاء غير متوقعة مثل ":00"
+            record.time = record.time.split(':')[0] + ':' + record.time.split(':')[1]
+            time_obj = datetime.strptime(record.time, '%H:%M').time()
+            record.formatted_time = time_obj.strftime('%I:%M %p')
+        else:
+            record.formatted_time = record.time.strftime('%I:%M %p')
+
     return render(request, 'web/Appointments.html', context={'records': records})
 
 

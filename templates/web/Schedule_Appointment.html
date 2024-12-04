@@ -1,6 +1,6 @@
-{%extends 'base.html'%}
+{% extends 'base.html' %}
 {% load crispy_forms_tags %}
-{%block content%}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,28 +9,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noura Fouad Clinics CRM - Schedule Appointment</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <style>
         body {
             background-color: #f8f9fa;
             font-family: 'Arial', sans-serif;
         }
-        
+
         .card {
             margin-bottom: 20px;
         }
-        
+
         .form-control {
             margin-bottom: 15px;
         }
-        
+
         .btn-primary {
             margin-top: 15px;
         }
+
         #id_service_details label {
             display: block;
             margin: 5px 0;
         }
-        
+
         #id_service_details input {
             margin-right: 10px;
         }
@@ -42,26 +45,38 @@
     <div class="container mt-5">
         <h1 class="h2">Schedule New Appointment</h1>
 
+        <!-- Appointment Information -->
+        <h4>Appointment Information</h4>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
 
-                    <!-- Appointment Information -->
-                    <h4>Appointment Information</h4>
-                    <form method="POST">
-
-                        {% csrf_token %}
-                        {{ form|crispy }}
-        
-                        
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary">Schedule Appointment</button>
-                </form>
-            </div>
-        </div>
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Schedule Appointment</button>
+        </form>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Flatpickr for date selection
+            flatpickr(".flatpickr-date", {
+                dateFormat: "Y-m-d", // Date format (YYYY-MM-DD)
+            });
+
+            // Flatpickr for time selection with AM/PM format
+            flatpickr(".flatpickr-time", {
+                enableTime: true,    // Enable time selection
+                noCalendar: true,    // Hide calendar
+                dateFormat: "h:i K", // Time format with AM/PM
+                time_24hr: false     // Use 12-hour format
+            });
+        });
+    </script>
+</body>
 
 </html>
-{%endblock%}
+{% endblock %}

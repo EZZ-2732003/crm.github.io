@@ -15,6 +15,7 @@ DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 # ALLOWED_HOSTS to include dynamic environment settings
 ALLOWED_HOSTS = ['*']
 
+
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') or [
     'https://testnoura-bxbrhtcaggfggweb.canadacentral-01.azurewebsites.net',
 ]
@@ -95,7 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Localization settings
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Cairo'
 USE_I18N = True
 USE_TZ = True
 
@@ -107,3 +108,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LANGUAGE_CODE = 'en-us'
+TIME_INPUT_FORMATS = [
+    '%H:%M',      # صيغة 24 ساعة
+    '%I:%M %p',   # صيغة 12 ساعة AM/PM
+]

@@ -79,9 +79,9 @@ class Reserve(models.Model):
     phone = models.CharField(max_length=100)
     type= models.CharField(max_length=100,choices=TYPE_CHOICES,default='old or new')
     date = models.DateField()
-    time = models.TimeField()
+    time = models.CharField(max_length=10)
     service = models.CharField(max_length=100,choices=SERVICE_CHOICES,default='service')
-   
+    notes=models.CharField( max_length=1000,default='notes')
     create_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     Branch=models.CharField(max_length=50,choices=BRANCH_CHOICES,default='Branch' )

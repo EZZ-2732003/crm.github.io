@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.forms.widgets import PasswordInput , TextInput
 from .models import*
 from django.forms import inlineformset_factory
-
+from django.core.exceptions import ValidationError
 
 # register user
 
@@ -37,33 +37,45 @@ class patient_form_edit(forms.ModelForm):
 from django import forms
 from datetime import datetime, timedelta
 
+from django import forms
+from .models import Reserve
+from django import forms
+from .models import Reserve
+from datetime import datetime
 class ReserveForm(forms.ModelForm):
-    patient_name = forms.CharField(max_length=100, label='Patient Name')
-    service_details = forms.MultipleChoiceField(
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-        choices=[],
-        label='Service Details',
+    date = forms.DateField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control flatpickr-date',
+            'placeholder': 'Select date'
+        }),
+        label='Date'
     )
-
-    # خيارات التواريخ
-    DATE_CHOICES = [
-        (datetime.now().date() + timedelta(days=i), (datetime.now().date() + timedelta(days=i)).strftime('%Y-%m-%d'))
-        for i in range(0, 30)  # قائمة تواريخ لـ 30 يومًا من اليوم
-    ]
-    # خيارات الأوقات
-    TIME_CHOICES = [
-        (f"{hour:02d}:{minute:02d}", f"{hour:02d}:{minute:02d}")
-        for hour in range(0, 24)  # ساعات العمل من 9 صباحًا إلى 5 مساءً
-        for minute in (0, 30)  # نصف ساعة بين كل خيار
-    ]
-
-    date = forms.ChoiceField(choices=DATE_CHOICES, label='Date')  # قائمة منسدلة للتاريخ
-    time = forms.ChoiceField(choices=TIME_CHOICES, label='Time')  # قائمة منسدلة للوقت
+    time = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'form-control flatpickr-time',
+            'placeholder': 'Select time (e.g., 10:30 AM)'
+        }),
+        label='Time'
+    )
 
     class Meta:
         model = Reserve
-        fields = ['patient_name', 'phone', 'type', 'date', 'time', 'service', 'Branch','service_details']
+        fields = ['patient_name', 'phone', 'type', 'date', 'time', 'service', 'Branch', 'notes']
+
+    def clean_time(self):
+        time_input = self.cleaned_data['time']
+        print(f"User Input for Time: {time_input}")
+
+        # التحقق من تنسيق الوقت باستخدام datetime
+        try:
+            # محاولة تحليل الوقت المدخل إلى كائن datetime
+            parsed_time = datetime.strptime(time_input, '%I:%M %p')
+            return parsed_time.time()  # إرجاع الوقت ككائن وقت
+        except ValueError:
+            raise forms.ValidationError("Invalid time format. Please use the format 'hh:mm AM/PM'.")
+
+
+
     
  
 
