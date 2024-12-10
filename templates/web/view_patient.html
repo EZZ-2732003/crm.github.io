@@ -1,20 +1,18 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block content %}
-
 <!DOCTYPE html>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Noura Fouad Clinics CRM - View Patient</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    /* الهوية البصرية الأساسية */
+    /* الهوية البصرية */
     body {
-        background: linear-gradient(120deg, #ffffff, #f9e1e7); /* الخلفية المتدرجة */
+        background: linear-gradient(135deg, #edd9d7, #d3978c); /* تدرج ألوان باستيل هادئة */
         font-family: 'Arial', sans-serif;
-        margin: 0;
-        padding: 0;
+        color: #444;
     }
 
     .content {
@@ -23,55 +21,110 @@
 
     .card {
         margin-bottom: 20px;
+        border: none;
         border-radius: 10px; /* زوايا دائرية */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
-        transition: all 0.3s ease-in-out;
     }
 
     .card-header {
-        font-weight: bold;
-        background-color: #f9e1e7; /* استخدام لون الخلفية */
-        color: #b88b4a; /* اللون الذهبي */
-        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #dfa89b; /* لون بيج فاتح */
+        color: #6b4f4f; /* بني فاتح */
+        border-radius: 10px 10px 0 0; /* زوايا دائرية فقط للأعلى */
         padding: 15px 20px;
     }
 
-    .card-body {
-        padding: 20px;
-    }
-
-    .patient-info span {
+    h1.h2 {
+        color: #343a40;
         font-weight: bold;
-        color: #b88b4a; /* اللون الذهبي */
+        margin-bottom: 20px;
+        text-align: center; /* مركزية العنوان */
     }
 
-    .btn-primary, .btn-danger, .btn-success, .btn-info {
+    /* تصميم جديد للجدول */
+    table.table {
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        width: 100%;
+    }
+
+    table thead th {
+        background-color: #c99087; /* وردي غامق */
+        color: white;
+        font-size: 1rem;
+        text-align: center;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        padding: 10px;
+    }
+
+    table tbody tr {
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+    }
+
+    table tbody tr:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    table tbody td {
+        padding: 15px;
+        text-align: center;
+        color: #343a40;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+
+    /* زر التأكيد والإلغاء */
+    .btn-primary,
+    .btn-danger,
+    .btn-success {
         font-size: 0.9em;
         border-radius: 8px;
         transition: background-color 0.3s ease;
+        color: #fff; /* لون النص الأبيض للأزرار */
     }
 
     .btn-primary {
-        background-color: #ff6699;
+        background-color: #c0857d; /* وردي متوسط */
         border: none;
-        color: white;
     }
-
     .btn-primary:hover {
-        background-color: #ff3366;
+        background-color: #af6a63; /* وردي أغمق عند الهوفر */
     }
 
-    .btn-danger:hover {
-        background-color: #c82333;
+    .btn-success {
+        background-color: #d3978c; /* بيج فاتح */
+        border: none;
     }
-
     .btn-success:hover {
-        background-color: #218838;
+        background-color: #b27b6d; /* بيج أغمق عند الهوفر */
     }
 
+    .btn-danger {
+        background-color: #dfa89b; /* لون بيج فاتح */
+        border: none;
+    }
+    .btn-danger:hover {
+        background-color: #c0857d; /* بيج أغمق عند الهوفر */
+    }
+
+    .btn-edit {
+        background-color: #c99087; /* لون التعديل */
+        border: none;
+    }
+    .btn-edit:hover {
+        background-color: #b3786e; /* أغمق عند الهوفر */
+    }
+
+    /* الشارات */
     .badge {
-        font-size: 1em;
-        padding: 0.5em;
+        padding: 0.5em 0.7em;
+        font-size: 0.9em;
         border-radius: 5px;
     }
 
@@ -87,46 +140,27 @@
         background-color: #dc3545;
     }
 
-    .table thead th {
-        background-color: #343a40;
-        color: white;
-        font-size: 1rem;
-        text-align: center;
-    }
-
-    .table tbody tr {
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease;
-        overflow: hidden;
-    }
-
-    .table tbody tr:hover {
-        transform: scale(1.02);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .table tbody td {
-        padding: 15px;
-        text-align: center;
-        font-weight: 500;
-        vertical-align: middle;
-    }
-
-    /* تحسين العرض على الهواتف */
+    /* تحسين عرض الجدول على الهاتف */
     @media (max-width: 768px) {
-        .table thead {
+        table.table {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        table thead {
             display: none;
         }
 
-        .table tbody tr {
+        table tbody tr {
             display: block;
             margin-bottom: 10px;
-            box-shadow: none;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         }
 
-        .table tbody td {
+        table tbody td {
             display: flex;
             justify-content: space-between;
             padding: 10px;
@@ -134,80 +168,71 @@
             border-bottom: 1px solid #ddd;
         }
 
-        .table tbody td::before {
+        table tbody td::before {
             content: attr(data-label);
             font-weight: bold;
-            color: #b88b4a;
+            color: #6b4f4f; /* بني فاتح */
+        }
+    }
+
+    @media (max-width: 576px) {
+        table.table {
+            display: flex;
+            flex-direction: column;
         }
 
-        .btn-primary {
-            width: 100%;
+        table tbody tr {
+            display: flex;
+            flex-direction: column;
             margin-bottom: 10px;
         }
 
-        .input-group .form-control, .input-group .btn-outline-primary {
-            width: 100%;
-            margin-bottom: 10px;
+        table tbody td {
+            display: block;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            position: relative;
         }
-    }
 
-    h1.h2 {
-        color: #343a40;
-        font-weight: bold;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-
-    .input-group .form-control {
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .input-group .btn-outline-primary {
-        border-radius: 8px;
-        border: none;
-        background-color: #ff6699;
-        color: white;
-        transition: background-color 0.3s ease;
-    }
-
-    .input-group .btn-outline-primary:hover {
-        background-color: #ff3366;
+        table tbody td::before {
+            content: attr(data-label);
+            font-weight: bold;
+            color: #6b4f4f; /* بني فاتح */
+            position: absolute;
+            left: 10px;
+        }
     }
 </style>
+
+
 
 
 <div class="container-fluid">
     <div class="row">
         <main role="main" class="col-md-12 ml-sm-auto col-lg-12 px-4">
-            <h1 class="h2">Patient Details</h1>
+            <h1 class="h2 mb-4">Patient Details</h1>
 
-            <!-- Patient Information -->
+            <!-- معلومات المريض -->
             <div class="card">
-                <div class="card-header">
-                    Personal Information
-                </div>
+                <div class="card-header">Personal Information</div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 patient-info">
-                            <p><span>Name:</span> {{ record.name }}</p>
-                            <p><span>Date of Birth:</span> {{ record.date_of_birth }}</p>
-                            <p><span>Address:</span> {{ record.address }}</p>
-                        </div>
-                        <div class="col-md-6 patient-info">
-                            <p><span>Phone:</span> {{ record.phone }}</p>
-                            <p><span>Last Visit:</span> {{ record.last_visit }}</p>
-                        </div>
-                    </div>
+                    <p><strong>Name:</strong> {{ record.name }}</p>
+                    <p><strong>Phone:</strong> {{ record.phone }}</p>
+                    <p><strong>Country:</strong> {{ record.country }}</p>
+                    <p><strong>Address:</strong> {{ record.address }}</p>
+                    <p><strong>Created At:</strong> {{ record.create_at }}</p>
+                    <p><strong>Date of Birth:</strong> {{ record.date_of_birth }}</p>
+                    <p><strong>Last Visit:</strong> {{ record.last_visit }}</p>
+                    <p><strong>How Did You Know Us:</strong> {{ record.how_did_you_know_us }}</p>
+
                     <a href="{% url 'edit_patient' record.id %}" class="btn btn-primary">Edit Patient</a>
                 </div>
             </div>
 
-            <!-- Medical History -->
+            <!-- السجل الطبي -->
             <div class="card">
-                <div class="card-header">
-                    Medical History
-                </div>
+                <div class="card-header">Medical History</div>
                 <div class="card-body">
                     <ul>
                         {% for history in medical_history %}
@@ -216,66 +241,47 @@
                             <p>No medical history available for this patient.</p>
                         {% endfor %}
                     </ul>
-                    <!-- إضافة السجل الطبي -->
-                    <form method="POST">
-                        {% csrf_token %}
-                        {{ form|crispy }}
-                        <button type="submit" class="btn btn-primary">Add Medical History</button>
-                    </form>
-                </div>
-            </div>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#addMedicalHistoryModal">Add Medical History</button>
                 </div>
             </div>
 
-        <!-- Reservations -->
-<div class="card">
-    <div class="card-header">
-        Recent Reservations
-    </div>
-    <div class="card-body">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Service</th>
-                    <th>Status</th>
-                    <th>Branch</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for reservation in reservations %}
-                    <tr>
-                        <td>{{ reservation.date }}</td>
-                        <td>{{ reservation.time }}</td>
-                        <td>{{ reservation.service }}</td>
-                        <td>
-                            {% if reservation.status == 'pending' %}
-                                <span class="badge badge-warning">Pending</span>
-                            {% elif reservation.status == 'completed' %}
-                                <span class="badge badge-success">Completed</span>
-                            {% elif reservation.status == 'cancelled' %}
-                                <span class="badge badge-danger">Cancelled</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ reservation.Branch }}</td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="5">No reservations found for this patient.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-
-            <!-- Payments -->
+            <!-- الحجوزات -->
             <div class="card">
-                <div class="card-header">
-                    Payment Information
+                <div class="card-header">Recent Reservations</div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>                             
+                                <th>Status</th>
+                                <th>Branch</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations %}
+                                <tr>
+                                    <td>{{ reservation.date }}</td>
+                                    <td>{{ reservation.time }}</td>                                 
+                                    <td>{{ reservation.status }}</td>
+                                    <td>{{ reservation.Branch }}</td>
+                                    <td><a href="{% url 'view_reservation' reservation.pk %}" class="btn btn-sm btn-info">View</a></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5">No reservations found for this patient.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#addReservationModal">Add Reservation</button>
                 </div>
+            </div>
+
+            <!-- المدفوعات -->
+            <div class="card">
+                <div class="card-header">Payment Information</div>
                 <div class="card-body">
                     <table class="table table-striped">
                         <thead>
@@ -289,18 +295,9 @@
                         <tbody>
                             {% for payment in payments %}
                                 <tr>
-                                    <td>{{ payment.created_at|date:"Y-m-d" }}</td>
-                                    <td>{{payment.get_total_amount}}EGP</td> <!-- يجب تعديل المبلغ بحسب تفاصيل الدفع -->
-                                    <td>
-                                        {% if payment.status == 'Paid' %}
-                                            <span class="badge badge-success">{{ payment.status }}</span>
-                                        {% elif payment.status == 'Cancelled' %}
-                                            <span class="badge badge-danger">{{ payment.status }}</span>
-                                        {% elif payment.status == 'Pending' %}
-                                            <span class="badge badge-warning">{{ payment.status }}</span>
-                                        {% else %}
-                                            <span class="badge badge-secondary">{{ payment.status }}</span>
-                                        {% endif %}
+                                    <td>{{ payment.created_at }}</td>
+                                    <td>{{ payment.amount }}</td>
+                                    <td>{{ payment.status }}</td>
                                     <td>{{ payment.method }}</td>
                                 </tr>
                             {% empty %}
@@ -310,15 +307,104 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#addPaymentModal">Add Payment</button>
                 </div>
             </div>
-
         </main>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<!-- النوافذ المنبثقة -->
+
+<!-- إضافة السجل الطبي -->
+<div class="modal fade" id="addMedicalHistoryModal" tabindex="-1" aria-labelledby="addMedicalHistoryLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMedicalHistoryLabel">Add Medical History</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ medical_history_form|crispy }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" name="add_medical_history" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- إضافة الحجز -->
+<div class="modal fade" id="addReservationModal" tabindex="-1" aria-labelledby="addReservationLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addReservationLabel">Add Reservation</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ reserve_form|crispy }}
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" name="add_reservation" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- إضافة المدفوعات -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPaymentLabel">Add Payment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {{ payment_form|crispy }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" name="add_payment" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr(".flatpickr-date", {
+            dateFormat: "Y-m-d",
+            locale: "en"
+        });
+        flatpickr(".flatpickr-time", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "h:i K",
+            time_24hr: false
+        });
+    });
+</script>
 {% endblock %}

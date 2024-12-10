@@ -4,39 +4,34 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from datetime import date
+from decimal import Decimal
 # Create your models here.
 # category model
-class Category(models.Model):
-    name = models.CharField(max_length=100)
-    creat_at = models.DateTimeField (auto_now_add = True)
-    
-    def __str__(self): 
-        return self.name
-    
-    #client model
-class Record(models.Model):
-    name = models.CharField(max_length=250)
-    phone = models.IntegerField()
-    address = models.CharField(max_length=255, default='Default Address')
-    creat_at = models.DateTimeField (auto_now_add = True)
-    def __str__(self): 
-        return self.name
+
     
     
 class patient(models.Model):
     name = models.CharField(max_length=250)
-    phone = models.IntegerField()
+    phone = models.CharField(max_length=20)
+    country=models.CharField(max_length=40,default='none')
     address = models.CharField(max_length=255, default='Default Address') 
     create_at = models.DateTimeField (auto_now_add = True)
     date_of_birth = models.DateField(null=True, blank=True)
     last_visit = models.DateField(null=True, blank=True)
+    how_did_you_know_us=models.CharField(max_length=100,default='none')
 
     def __str__(self):
         return self.name  
     class Meta :
             ordering = ['-create_at']
         
-        
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # سعر الخدمة
+
+    def __str__(self):
+        return self.name        
         
 
 class Reserve(models.Model):
@@ -50,44 +45,24 @@ class Reserve(models.Model):
         ('5th_sattelment', '5th_sattelment'),
         ('Naser_city', 'Naser_city'),
     ]
-    SERVICE_CHOICES = [
-        
-        ('Consultation', 'Consultation'),
-        ('Retouch', 'Retouch'),
-        
-            ('Retouch: filler_nose', 'Retouch: Filler Nose'),
-            ('Retouch: filler_lip', 'Retouch: Filler Lip'),
-            ('Retouch: botox', 'Retouch: Botox'),
-            
-            ('botox', 'Botox'),
-            ('filler_face', 'Filler Face'),
-            ('filler_nose', 'Filler Nose'),
-            ('filler_lip', 'Filler Lip'),
-            ('skin_booster_syringe', 'Skin Booster Syringe'),
-            ('skin_booster_injection', 'Skin Booster Injection'),
-            ('dissolving_filler', 'Dissolving Filler'),
-            ('dermapen', 'Dermapen'),
-            ('plasmage', 'Plasmage'),
-            ('other','Other'),
-    ]
-    TYPE_CHOICES =[
-        ('old','old'),
-        ('new','new'),
+    TYPE_CHOICES = [
+        ('old', 'old'),
+        ('new', 'new'),
     ]
     patient_name = models.CharField(max_length=100)
-    
     phone = models.CharField(max_length=100)
-    type= models.CharField(max_length=100,choices=TYPE_CHOICES,default='old or new')
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES, default='old')
     date = models.DateField()
     time = models.CharField(max_length=10)
-    service = models.CharField(max_length=100,choices=SERVICE_CHOICES,default='service')
-    notes=models.CharField( max_length=1000,default='notes')
+    
+    notes = models.CharField(max_length=1000, default='notes')
     create_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    Branch=models.CharField(max_length=50,choices=BRANCH_CHOICES,default='Branch' )
+    Branch = models.CharField(max_length=50, choices=BRANCH_CHOICES, default='Branch')
+
     def __str__(self):
         return str(self.patient_name)
-    
+
     def add_phone(self, new_phone):
         """إضافة رقم جديد إذا لم يكن موجودًا بالفعل."""
         existing_numbers = self.phone.split(", ")  # تفكيك الأرقام الحالية
@@ -96,16 +71,37 @@ class Reserve(models.Model):
             self.phone = ", ".join(existing_numbers)  # إعادة تجميع الأرقام
             self.save()
 
-    class Meta :
-            ordering = ['-create_at']
+    class Meta:
+        ordering = ['-create_at']
 
+    def save(self, *args, **kwargs):
+        # تحقق من حالة الحجز قبل حفظ الكائن
+        if self.status == 'completed' and not patient.objects.filter(name=self.patient_name).exists():
+            # إنشاء مريض جديد فقط إذا لم يكن موجودًا بالفعل في قاعدة البيانات
+            patient.objects.create(
+                name=self.patient_name,
+                phone=self.phone,
+                address='Default Address',  # أو قم بتعديل هذا إذا كان هناك عنوان معين
+                create_at=self.create_at,
+                date_of_birth=None,  # قم بتعديل هذا إذا كان هناك تاريخ ميلاد متاح
+                last_visit=None  # قم بتعديل هذا إذا كان هناك تاريخ زيارة متاح
+            )
+        super().save(*args, **kwargs)
+ 
+
+class ReservationService(models.Model):
+    reserve = models.ForeignKey(Reserve, on_delete=models.CASCADE, related_name="reservation_services")
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+
+
+    def __str__(self):
+        return f"{self.reserve} - {self.service}"       
 
 class Companies(models.Model):
     company_name = models.CharField(max_length=255)
     company_address = models.CharField(max_length=500)
     company_phone = models.CharField(max_length=20)
-    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # إجمالي المدفوعات
-    total_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)   # إجمالي المتبقي
+
 
     def __str__(self):
         return self.company_name
@@ -123,7 +119,7 @@ class Companies(models.Model):
 class Inventory(models.Model):
     item_name = models.CharField(max_length=300)
     item_quantity = models.IntegerField()  # الكمية الموجودة في المخزن
-    item_price = models.DecimalField(max_digits=10, decimal_places=2)  # سعر البيع
+    
     item_cost = models.DecimalField(max_digits=10, decimal_places=2)  # تكلفة المنتج
     company_source = models.ForeignKey(Companies, on_delete=models.CASCADE, related_name='inventory_items')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -146,12 +142,7 @@ class Inventory(models.Model):
 
 
 
-class Service(models.Model):
-    name = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # سعر الخدمة
 
-    def __str__(self):
-        return self.name
 
 
 
@@ -174,7 +165,7 @@ class Payment(models.Model):
         ('Naser_city', 'Naser_city'),
     ]
 
-    patient = models.CharField(max_length=20)
+    patient = models.CharField(max_length=100)
     Branch=models.CharField(max_length=50,choices=BRANCH_CHOICES,default='Branch' )
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
@@ -232,12 +223,14 @@ class PaymentInventory(models.Model):
         self.inventory.reduce_quantity(self.quantity)
         
     
+class offers(models.Model):
+    offer_name =models.CharField(max_length=250)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, help_text=("Enter the discount percentage (e.g., 10 for 10%)"))
+    def __str__(self):
+        return self.offer_name
 
 
-from django.db import models
-from datetime import datetime
-import json
-from decimal import Decimal
+
 
 
 

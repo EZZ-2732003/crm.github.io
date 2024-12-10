@@ -1,12 +1,10 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block content %}
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ company.company_name }} - Profile</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Reservations</title>
     <style>
         body {
             background: linear-gradient(120deg, #ffffff, #f9e1e7);
@@ -143,61 +141,62 @@
         }
     </style>
 </head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <main role="main" class="col-md-12 ml-sm-auto col-lg-12 px-4">
-                <h1 class="h2">Company List</h1>
 
-                <div class="card">
-                    <div class="card-header">
-                        <span>All Companies</span>
-                        <a href="{% url 'add_company' %}" class="btn btn-primary btn-sm">Add New Company</a>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Company Name</th>
-                                    <th>Address</th>
-                                    <th>Phone</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for company in companies %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td data-label="Company Name">{{ company.company_name }}</td>
-                                    <td data-label="Address">{{ company.company_address }}</td>
-                                    <td data-label="Phone">{{ company.company_phone }}</td>
-                                    
-                                    <td data-label="Actions">
-                                        <a href="{%url 'company_detail' company.id%}" class="btn btn-info btn-sm">View</a>
-                                        <a href="{%url 'edit_company' company.id%}" class="btn btn-warning btn-sm">Edit</a>
-                                        <form method="POST" action="{% url 'delete_company' company.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this patient?');">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="7">No companies found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
-        </div>
+<div class="content">
+    <h1 class="h2">Today's Reservations</h1>
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Services</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in today_reservations %}
+                <tr>
+                    <td>{{ reservation.patient_name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.formatted_time }}</td>
+                    <td>{{ reservation.Branch }}</td>
+                    <td><a href="{% url 'view_reservation' reservation.pk %}" class="btn btn-sm btn-info">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
-{% endblock %}
+    <h1 class="h2">Future Reservations</h1>
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Services</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in future_reservations %}
+                <tr>
+                    <td>{{ reservation.patient_name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.formatted_time }}</td>
+                    <td>{{ reservation.Branch }}</td>
+                    <td><a href="{% url 'view_reservation' reservation.pk %}" class="btn btn-sm btn-info">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+ {% endblock %}
+
+

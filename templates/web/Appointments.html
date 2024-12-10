@@ -169,12 +169,12 @@
                     <thead>
                         <tr>
                             <th>Patient Name</th>
-                            <th>Client</th>
+                            <th>Old or New</th>
                             <th>Phone</th>
                             <th>Date</th>
                             <th>Time</th>
                             <th>Branch</th>
-                            <th>Service</th>
+                            
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -188,7 +188,8 @@
                             <td data-label="Date">{{ record.date }}</td>
                             <td data-label="Time">{{ record.formatted_time }}</td>
                             <td data-label="Branch">{{ record.Branch }}</td>
-                            <td data-label="Service">{{ record.service }}</td>
+                           
+                            
                             <td data-label="Status">
                                 {% if record.status == 'pending' %}
                                     <span class="badge badge-warning">Pending</span>
@@ -199,6 +200,7 @@
                                 {% endif %}
                             </td>
                             <td data-label="Actions">
+                                <a href="{% url 'view_reservation' record.id %}" class="btn btn-sm btn-info">View</a>
                                 {% if record.status == 'pending' %}
                                     <a href="{% url 'update_appointment_status' record.id 'completed' %}" class="btn btn-sm btn-success">Confirm</a>
                                     <a href="{% url 'update_appointment_status' record.id 'cancelled' %}" class="btn btn-sm btn-danger">Cancel</a>

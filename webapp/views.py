@@ -16,15 +16,19 @@ from django.db.models import Sum, F, Count
 from django.core.serializers import serialize
 from django.utils.dateparse import parse_date, parse_time
 from decimal import Decimal
+from django.db.models import Prefetch
+from datetime import datetime
+from django.shortcuts import render, redirect
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate, login
+
+
 # Create your views here.
 def index (request):
     return render(request, 'web/index.html')
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate, login
 
 def register(request):
     if request.method == 'POST':
@@ -127,37 +131,67 @@ def delete_patient(request, patient_id):
 
 
 @login_required(login_url='login')
+
 def view_patient(request, record_id):
-    # تأكد من الحصول على كائن المريض الصحيح
-    patient_record = get_object_or_404(patient, id=record_id)  # تأكد من أن هذا يُرجع كائن مريض
+    # الحصول على كائن المريض
+    patient_record = get_object_or_404(patient, id=record_id)
 
-    # السجل الطبي
+    # استرجاع السجلات المرتبطة
     medical_history = Medical_History.objects.filter(patient=patient_record)
+    reservations = Reserve.objects.filter(patient_name=patient_record.name)
+    payments = Payment.objects.filter(patient=patient_record.name)
 
-    # الحجوزات
-    reservations = Reserve.objects.filter(patient_name=patient_record)
+    # إنشاء الفورمات
+    medical_history_form = MedicalHistoryForm(request.POST or None)
+    reserve_form = ReserveForm(request.POST or None)
+    payment_form = PaymentForm(request.POST or None)
 
-    # الفواتير
-    payments = Payment.objects.filter(patient=patient_record)
-
-    # إضافة السجل الطبي
+    # معالجة النموذج المرسل
     if request.method == 'POST':
-        form = MedicalHistoryForm(request.POST)
-        if form.is_valid():
-            medical_history_entry = form.save(commit=False)
-            # تعيين كائن المريض لكائن السجل الطبي
-            medical_history_entry.patient = patient_record  # هذا يجب أن يكون كائن مريض وليس نصًا
-            medical_history_entry.save()  # حفظ السجل الطبي
+        # إضافة سجل طبي جديد
+        if 'add_medical_history' in request.POST and medical_history_form.is_valid():
+            medical_history_entry = medical_history_form.save(commit=False)
+            medical_history_entry.patient = patient_record
+            medical_history_entry.save()
+            messages.success(request, "Medical history added successfully.")
             return redirect('view_patient', record_id=record_id)
-    else:
-        form = MedicalHistoryForm()
 
+        # إضافة حجز جديد
+        # إضافة حجز جديد
+        if 'add_reservation' in request.POST and reserve_form.is_valid():
+            # حفظ الحجز
+            reserve = reserve_form.save(commit=False)
+            reserve.patient_name = patient_record.name
+            reserve.phone = patient_record.phone
+            reserve.save()
+            
+            # حفظ الخدمات المرتبطة باستخدام النموذج الوسيط
+            selected_services = reserve_form.cleaned_data.get('selected_services', [])
+            for service in selected_services:
+                ReservationService.objects.create(reserve=reserve, service=service)
+            
+            # رسالة تأكيد
+            messages.success(request, "Reservation added successfully.")
+            return redirect('view_patient', record_id=record_id)
+
+
+        # إضافة فاتورة جديدة
+        if 'add_payment' in request.POST and payment_form.is_valid():
+            payment = payment_form.save(commit=False)
+            payment.patient = patient_record.name
+            payment.save()
+            messages.success(request, "Payment added successfully.")
+            return redirect('view_patient', record_id=record_id)
+
+    # تمرير البيانات إلى القالب
     context = {
         'record': patient_record,
         'medical_history': medical_history,
         'reservations': reservations,
         'payments': payments,
-        'form': form,  # تمرير الفورم إلى الصفحة
+        'medical_history_form': medical_history_form,
+        'reserve_form': reserve_form,
+        'payment_form': payment_form,
     }
 
     return render(request, 'web/view_patient.html', context)
@@ -182,48 +216,119 @@ def add_patient (request):
 
 
 
+
 def Appointments(request):
-    query = request.GET.get('q')  
+    query = request.GET.get('q')  # البحث بناءً على الاسم أو الهاتف
+
+    # جلب السجلات بناءً على البحث أو عرض كل السجلات
     if query:
-        
         records = Reserve.objects.filter(
-            Q(name__name__icontains=query) |  
-            Q(phone__icontains=query)  
+            Q(patient_name__icontains=query) |  # البحث في اسم المريض
+            Q(phone__icontains=query)          # البحث في رقم الهاتف
+        ).prefetch_related(
+            Prefetch('reservation_services', queryset=ReservationService.objects.select_related('service'))
         )
     else:
-        records = Reserve.objects.all()
+        records = Reserve.objects.prefetch_related(
+            Prefetch('reservation_services', queryset=ReservationService.objects.select_related('service'))
+        ).all()
 
-    records = Reserve.objects.all()
+    # معالجة الوقت وعرضه بتنسيق 12 ساعة
     for record in records:
-        if isinstance(record.time, str):  # تحقق من أن الوقت مخزن كـ CharField
-            # إزالة أي أجزاء غير متوقعة مثل ":00"
-            record.time = record.time.split(':')[0] + ':' + record.time.split(':')[1]
-            time_obj = datetime.strptime(record.time, '%H:%M').time()
-            record.formatted_time = time_obj.strftime('%I:%M %p')
+        if isinstance(record.time, str):  # إذا كان الوقت مخزن كـ CharField
+            try:
+                # إزالة أي أجزاء إضافية غير متوقعة
+                record.time = record.time.split(':')[0] + ':' + record.time.split(':')[1]
+                time_obj = datetime.strptime(record.time, '%H:%M').time()
+                record.formatted_time = time_obj.strftime('%I:%M %p')  # تنسيق 12 ساعة
+            except ValueError:
+                record.formatted_time = record.time  # في حال لم يكن التنسيق صحيحًا
         else:
-            record.formatted_time = record.time.strftime('%I:%M %p')
+            record.formatted_time = record.time.strftime('%I:%M %p')  # إذا كان وقتًا فعليًا
 
+        # إضافة الخدمات المرتبطة إلى كل حجز
+        record.services_list = [reserve_service.service.name for reserve_service in record.reservation_services.all()]
+
+    # تمرير البيانات إلى القالب
     return render(request, 'web/Appointments.html', context={'records': records})
 
 
+def view_reservation(request, pk):
+    """عرض تفاصيل الحجز"""
+    reservation = get_object_or_404(Reserve, pk=pk)
+
+    # معالجة الوقت وعرضه بتنسيق 12 ساعة
+    if isinstance(reservation.time, str):  # إذا كان الوقت مخزن كـ CharField
+        try:
+            # إزالة أي أجزاء إضافية غير متوقعة
+            reservation.time = reservation.time.split(':')[0] + ':' + reservation.time.split(':')[1]
+            time_obj = datetime.strptime(reservation.time, '%H:%M').time()
+            reservation.formatted_time = time_obj.strftime('%I:%M %p')  # تنسيق 12 ساعة
+        except ValueError:
+            reservation.formatted_time = reservation.time  # في حال لم يكن التنسيق صحيحًا
+    else:
+        reservation.formatted_time = reservation.time.strftime('%I:%M %p')  # إذا كان وقتًا فعليًا
+
+    return render(request, 'web/view_reservation.html', {'reservation': reservation})
+
+
+def edit_reservation(request, pk):
+    """تعديل الحجز مع تحديث الخدمات المترابطة"""
+    reservation = get_object_or_404(Reserve, pk=pk)  # جلب الحجز باستخدام المفتاح الأساسي
+
+    # جلب الخدمات المرتبطة حاليًا بالحجز
+    existing_services = reservation.reservation_services.all().values_list('service_id', flat=True)
+
+    if request.method == 'POST':
+        form = ReserveForm(request.POST, instance=reservation)  # تمرير الحجز الحالي إلى النموذج
+        if form.is_valid():
+            updated_reservation = form.save()  # حفظ بيانات الحجز الرئيسية
+
+            # تحديث الخدمات المرتبطة
+            selected_services = form.cleaned_data['selected_services']  # الخدمات المختارة في النموذج
+            current_service_ids = set(existing_services)  # الخدمات الحالية
+            new_service_ids = set(service.id for service in selected_services)  # الخدمات الجديدة
+
+            # إضافة خدمات جديدة
+            for service_id in new_service_ids - current_service_ids:
+                ReservationService.objects.create(reserve=updated_reservation, service_id=service_id)
+
+            # حذف الخدمات غير المختارة
+            for service_id in current_service_ids - new_service_ids:
+                ReservationService.objects.filter(reserve=updated_reservation, service_id=service_id).delete()
+
+            return redirect('view_reservation', pk=reservation.pk)  # إعادة التوجيه إلى صفحة عرض الحجز
+    else:
+        # تمرير الخدمات الحالية إلى النموذج
+        form = ReserveForm(instance=reservation)
+        form.fields['selected_services'].initial = existing_services
+
+    return render(request, 'web/edit_reservation.html', {'form': form, 'reservation': reservation})
 
 @login_required(login_url='login')
 def Schedule_Appointment(request):
     if request.method == 'POST':
         form = ReserveForm(request.POST)
         if form.is_valid():
-            form.save()
+            # حفظ الحجز
+            reserve = form.save()
+
+            # حفظ الخدمات المرتبطة باستخدام النموذج الوسيط
+            selected_services = form.cleaned_data['selected_services']
+            for service in selected_services:
+                ReservationService.objects.create(reserve=reserve, service=service)
+
             return redirect('Appointments')
     else:
         form = ReserveForm()
 
     context = {'form': form}
-    return render(request, 'web/Schedule_Appointment.html', context=context)
+    return render(request, 'web/Schedule_Appointment.html', context)
 
 
 
-def view_appointments (request):
-    return render(request, 'web/view_appointments.html')
+
+
 
 
 def update_appointment_status(request, appointment_id, status):
@@ -245,17 +350,11 @@ def update_appointment_status(request, appointment_id, status):
     return redirect('Appointments')
 
 
-def billing (request):
-    return render(request, 'web/billing.html')
-
-
-def report(request):
-    return render(request , 'web/report.html')
 
 
 
-def settings(request):
-    return render(request , 'web/settings.html')
+
+
 
 
 def my_Logout(request):
@@ -688,15 +787,6 @@ def delete_company(request, company_id):
     return render(request, 'confirm_delete.html', {'Companies': Companies})
 
 
-from django.db.models import F, Sum
-
-from django.db.models import Q
-from datetime import timedelta, datetime
-
-from django.db.models import Sum, Count, F
-from datetime import datetime, timedelta
-from django.shortcuts import render
-from .models import Reserve, Invoice, Inventory, Companies, Payment, PaymentService, PaymentInventory, patient
 
 def statistics_view(request):
     # جلب البيانات من الـ GET لتحديد الفترات الزمنية
@@ -959,3 +1049,75 @@ def naser_city_branch(request):
     }
 
     return render(request, 'web/naser_city_branch.html', context)
+
+
+
+
+def tasks(request):
+    today = date.today()
+    today_reservations = Reserve.objects.filter(date=today)
+    future_reservations = Reserve.objects.filter(date__gt=today)
+
+    # معالجة الوقت وعرضه بتنسيق 12 ساعة لكل حجز في today_reservations
+    for reservation in today_reservations:
+        if isinstance(reservation.time, str):  # إذا كان الوقت مخزن كـ CharField
+            try:
+                # إزالة أي أجزاء إضافية غير متوقعة
+                reservation.time = reservation.time.split(':')[0] + ':' + reservation.time.split(':')[1]
+                time_obj = datetime.strptime(reservation.time, '%H:%M').time()
+                reservation.formatted_time = time_obj.strftime('%I:%M %p')  # تنسيق 12 ساعة
+            except ValueError:
+                reservation.formatted_time = reservation.time  # في حال لم يكن التنسيق صحيحًا
+        else:
+            reservation.formatted_time = reservation.time.strftime('%I:%M %p')  # إذا كان وقتًا فعليًا
+
+    # معالجة الوقت وعرضه بتنسيق 12 ساعة لكل حجز في future_reservations
+    for reservation in future_reservations:
+        if isinstance(reservation.time, str):  # إذا كان الوقت مخزن كـ CharField
+            try:
+                # إزالة أي أجزاء إضافية غير متوقعة
+                reservation.time = reservation.time.split(':')[0] + ':' + reservation.time.split(':')[1]
+                time_obj = datetime.strptime(reservation.time, '%H:%M').time()
+                reservation.formatted_time = time_obj.strftime('%I:%M %p')  # تنسيق 12 ساعة
+            except ValueError:
+                reservation.formatted_time = reservation.time  # في حال لم يكن التنسيق صحيحًا
+        else:
+            reservation.formatted_time = reservation.time.strftime('%I:%M %p')  # إذا كان وقتًا فعليًا
+
+    context = {
+        'today_reservations': today_reservations,
+        'future_reservations': future_reservations,
+    }
+    return render(request, 'web/tasks.html', context)
+
+
+def offer(request):
+    offer = offers.objects.all()  # استخدام اسم النموذج الصحيح
+    if request.method == 'POST':
+        form = OffersForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Offer added successfully!")
+            return redirect('offers_list')  # استبدل 'offers_list' باسم الصفحة التي تريد إعادة التوجيه إليها
+        else:
+            messages.error(request, "There was an error. Please try again.")
+    else:
+        form = OffersForm()
+
+    context = {
+        'offers': offer,
+        'form': form  # إضافة النموذج إلى السياق لعرضه في القالب
+    }
+    return render(request, 'web/offer.html', context)
+
+
+        
+
+
+# View to delete an offer
+def offer_delete(request, pk):
+    offer = get_object_or_404(offers, pk=pk)
+    if request.method == 'POST':
+        offer.delete()
+        return redirect('offers_list')  # استبدل 'offers_list' باسم العرض المناسب
+    return render(request, 'offers/offer_confirm_delete.html', {'offer': offer})

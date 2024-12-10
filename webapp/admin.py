@@ -2,12 +2,7 @@ from django.contrib import admin
 from.models import *
 
 # Register your models here.
-@admin.register(Category)
-class  CategoryAdmin(admin.ModelAdmin):
-    pass
-@admin.register(Record)
-class RecordAdmin(admin.ModelAdmin):
-    pass
+
 
 @admin.register(patient)
 class patientAdmin(admin.ModelAdmin):
@@ -16,17 +11,19 @@ class patientAdmin(admin.ModelAdmin):
 @admin.register(Reserve)
 class ReserveAdmin(admin.ModelAdmin):
     pass
-
+@admin.register(offers)
+class offersAdmin(admin.ModelAdmin):
+    pass
 
 # تسجيل نموذج Companies
 class CompaniesAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'company_address', 'company_phone', 'total_paid', 'total_due')
+    list_display = ('company_name', 'company_address', 'company_phone')
     search_fields = ('company_name', 'company_phone')
-    list_filter = ('total_due',)
+    
 
 # تسجيل نموذج Inventory
 class InventoryAdmin(admin.ModelAdmin):
-    list_display = ('item_name', 'item_quantity', 'item_price', 'item_cost', 'company_source', 'created_at')
+    list_display = ('item_name', 'item_quantity',  'item_cost', 'company_source', 'created_at')
     search_fields = ('item_name', 'company_source__company_name')
     list_filter = ('company_source', 'created_at')
 

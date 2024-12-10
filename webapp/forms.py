@@ -5,6 +5,10 @@ from django.forms.widgets import PasswordInput , TextInput
 from .models import*
 from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
+from datetime import datetime, timedelta
+from .models import Reserve
+
+
 
 # register user
 
@@ -23,26 +27,26 @@ class loginForm(AuthenticationForm):
 class patient_form(forms.ModelForm):
     class Meta: 
         model = patient
-        fields =  fields = ['name', 'date_of_birth', 'phone','address', 'last_visit' ]
+        fields =  fields = ['name','country', 'date_of_birth', 'phone','address', 'last_visit','how_did_you_know_us' ]
         
 class patient_form_edit(forms.ModelForm):
     class Meta: 
         model = patient
-        fields =  fields = ['name', 'date_of_birth', 'phone','address', 'last_visit' ]
+        fields =  fields = ['name','country', 'date_of_birth', 'phone','address', 'last_visit','how_did_you_know_us' ]
     
 
 
 
 
-from django import forms
-from datetime import datetime, timedelta
-
-from django import forms
-from .models import Reserve
-from django import forms
-from .models import Reserve
-from datetime import datetime
 class ReserveForm(forms.ModelForm):
+    # قائمة بالخدمات كـ Checkbox أو SelectMultiple
+    selected_services = forms.ModelMultipleChoiceField(
+        queryset=Service.objects.all(),
+        widget=forms.CheckboxSelectMultiple(),  # واجهة لعرض الخيارات كـ مربعات اختيار
+        required=True,
+        label="Select Services"
+    )
+
     date = forms.DateField(
         widget=forms.TextInput(attrs={
             'class': 'form-control flatpickr-date',
@@ -53,48 +57,35 @@ class ReserveForm(forms.ModelForm):
     time = forms.CharField(
         widget=forms.TextInput(attrs={
             'class': 'form-control flatpickr-time',
-            'placeholder': 'Select time (e.g., 10:30 AM)',
-            'style': 'height: 10px;'
+            'placeholder': 'Select time (e.g., 10:30 AM)'
         }),
         label='Time'
     )
 
     class Meta:
         model = Reserve
-        fields = ['patient_name', 'phone', 'type', 'date', 'time', 'service', 'Branch', 'notes']
+        fields = ['patient_name', 'phone', 'type', 'date', 'time', 'Branch', 'notes','selected_services']  # بدون حقل الخدمات
 
     def clean_time(self):
         time_input = self.cleaned_data['time']
-        print(f"User Input for Time: {time_input}")
-
-        # التحقق من تنسيق الوقت باستخدام datetime
         try:
-            # محاولة تحليل الوقت المدخل إلى كائن datetime
             parsed_time = datetime.strptime(time_input, '%I:%M %p')
-            return parsed_time.time()  # إرجاع الوقت ككائن وقت
+            return parsed_time.time()
         except ValueError:
             raise forms.ValidationError("Invalid time format. Please use the format 'hh:mm AM/PM'.")
-
-
-
-    
- 
-
-
-
         
 
 
 class CompanyForm(forms.ModelForm):
     class Meta:
         model = Companies
-        fields = ['company_name', 'company_address', 'company_phone', 'total_paid', 'total_due']
+        fields = ['company_name', 'company_address', 'company_phone']
 
 
 class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
-        fields = ['item_name', 'item_quantity', 'item_price', 'item_cost', 'company_source']
+        fields = ['item_name', 'item_quantity', 'item_cost', 'company_source']
         
         
         
@@ -190,3 +181,8 @@ class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = ['name', 'price']        
+
+class OffersForm(forms.ModelForm):
+    class Meta:
+        model=offers
+        fields = ['offer_name','discount_percentage']        

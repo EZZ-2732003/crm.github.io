@@ -9,14 +9,14 @@ urlpatterns = [
     path('logout/', views.my_Logout, name='logout'),
     path('patients', views.patients,name='patients'),
     path('Appointments',views.Appointments,name='Appointments'),
-    path('billing', views.billing, name='billing'),
-    path ('report', views.report, name='report'),
-    path ('settings', views.settings, name='settings'),
+    path('reservation/<int:pk>/', views.view_reservation, name='view_reservation'),
+    
+   
     path('view_patient/<int:record_id>/', views.view_patient , name='view_patient') ,
     path('add_patient', views.add_patient, name='add_patient'),
     path('Schedule_Appointment', views.Schedule_Appointment,name='Schedule_Appointment'),
-    path('view_appointments', views.view_appointments, name='view_appointments'),
     path('Appointments/<int:appointment_id>/<str:status>/', views.update_appointment_status, name='update_appointment_status'),
+    path('reservation/edit/<int:pk>/', views.edit_reservation, name='edit_reservation'),
     path('patients/delete/<int:patient_id>/', views.delete_patient, name='delete_patient'),
     path('patients/<int:record_id>/edit/', views.edit_patient, name='edit_patient'),
     # Company URLs
@@ -82,5 +82,10 @@ urlpatterns = [
     path('branches/',views.branch, name='branches'),
     path('ElMohandseen_branch',views.ElMohandseen_branch, name='ElMohandseen_branch'),
     path('fifeth_sattelmant_branch', views.fifeth_sattelmant_branch, name='fifeth_sattelmant_branch'),
-    path('naser_city_branch', views.naser_city_branch, name='naser_city_branch')
+    path('naser_city_branch', views.naser_city_branch, name='naser_city_branch'),
+    path('tasks/',views.tasks,name='tasks'),
+    path('offers/',views.offer,name='offers_list'),
+    
+   
+    path('offers/delete/<int:pk>/', views.offer_delete, name='offer_delete'),
 ]

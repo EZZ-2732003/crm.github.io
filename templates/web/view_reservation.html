@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Reservation Details</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>Patient Name:</th>
+            <td>{{ reservation.patient_name }}</td>
+        </tr>
+        <tr>
+            <th>Phone:</th>
+            <td>{{ reservation.phone }}</td>
+        </tr>
+        <tr>
+            <th>Type:</th>
+            <td>{{ reservation.type }}</td>
+        </tr>
+        <tr>
+            <th>Date:</th>
+            <td>{{ reservation.date }}</td>
+        </tr>
+        <tr>
+            <th>Time:</th>
+            <td>{{ reservation.formatted_time }}</td>
+        </tr>
+        <tr>
+            <th>Branch:</th>
+            <td>{{ reservation.Branch }}</td>
+        </tr>
+        <tr>
+            <th>Service(s):</th>
+            <td>
+                {% for reserve_service in reservation.reservation_services.all %}
+                    {{ reserve_service.service.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    No services assigned
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Status:</th>
+            <td>{{ reservation.status }}</td>
+        </tr>
+        <tr>
+            <th>Notes:</th>
+            <td>{{ reservation.notes }}</td>
+        </tr>
+    </table>
+    <a href="{% url 'edit_reservation' reservation.id %}" class="btn btn-primary">Edit</a>
+    
+</div>
+{% endblock %}
