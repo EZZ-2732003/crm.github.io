@@ -147,28 +147,18 @@ PaymentInventoryFormSet = inlineformset_factory(
         
         
 class InvoiceForm(forms.ModelForm):
-    payment_method = forms.ChoiceField(choices=Invoice.PAYMENT_METHODS, label="Payment Method", required=False)
-    due_dates = forms.CharField(widget=forms.HiddenInput(), required=False)  # ستملأها باستخدام JavaScript
-    payments = forms.CharField(widget=forms.HiddenInput(), required=False)   # ستملأها باستخدام JavaScript
-
     class Meta:
         model = Invoice
-        fields = ['company', 'item', 'quantity_purchased', 'total_cost', 'payment_method']
-
+        fields = ['company', 'item', 'quantity_purchased', 'total_cost', 
+                  'payment_method', 'installments_count']
+        
     def clean(self):
         cleaned_data = super().clean()
-        payment_method = cleaned_data.get("payment_method")
-        
-        # إذا تم اختيار الدفع الآجل، تحقق مما إذا كانت البيانات المدخلة موجودة أم لا
-        due_dates = cleaned_data.get("due_dates")
-        payments = cleaned_data.get("payments")
+        payment_method = cleaned_data.get('payment_method')
+        installments_count = cleaned_data.get('installments_count')
 
-        # إذا كانت الحقول فارغة، فقط تجاهلها ولا تعرض أي خطأ
-        if payment_method == 'Deferred':
-            if not due_dates or not payments:
-                cleaned_data['due_dates'] = ''  # تأكد أن الحقل فارغ وليس به قيمة افتراضية
-                cleaned_data['payments'] = ''
-        
+        if payment_method == 'Installments' and (not installments_count or installments_count <= 0):
+            self.add_error('installments_count', 'Installments count must be greater than 0 for installment payment.')
         return cleaned_data
         
         

@@ -1,91 +1,49 @@
 {% extends 'base.html' %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Detail</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            background: linear-gradient(120deg, #ffffff, #f9e1e7);
-            font-family: 'Arial', sans-serif;
-        }
-        .content {
-            padding: 20px;
-        }
-        .card {
-            margin-bottom: 20px;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f9e1e7;
-            color: #b88b4a;
-            border-radius: 10px 10px 0 0;
-            padding: 15px 20px;
-        }
-        h2 {
-            color: #343a40;
-            font-weight: bold;
-            text-align: center;
-        }
-        p {
-            color: #343a40;
-            font-weight: 500;
-            margin: 5px 0;
-        }
-        .btn-primary, .btn-success {
-            font-size: 0.9em;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-        }
-        .btn-primary:hover {
-            background-color: #5568c3;
-        }
-        .btn-success:hover {
-            background-color: #218838;
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-header">
-                <span>Invoice Detail for {{ invoice.company.company_name }}</span>
-            </div>
-            <div class="card-body">
-                <div class="content">
-                    <p><strong>Item:</strong> {{ invoice.item.item_name }}</p>
-                    <p><strong>Quantity Purchased:</strong> {{ invoice.quantity_purchased }}</p>
-                    <p><strong>Quantity Used:</strong> {{ invoice.quantity_used }}</p>
-                    <p><strong>Total Cost:</strong> EGP{{ invoice.total_cost }}</p>
-                    <p><strong>Total Paid:</strong> EGP{{ invoice.total_paid }}</p>
-                    <p><strong>Total Due:</strong> EGP{{ total_due }}</p>
-                    <p><strong>Payment Method:</strong> {{ invoice.payment_method }}</p>
-                    <a href="{% url 'invoice_list' %}" class="btn btn-primary">Back to Invoice List</a>
-                    {% if invoice.payment_method == 'Deferred' %}
-                    <hr>
-                    <h3>Add New Payment</h3>
-                    <form action="{% url 'add_payment' invoice.id %}" method="post">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="amount">Payment Amount:</label>
-                            <input type="number" name="amount" class="form-control" id="amount" step="0.01" required>
-                        </div>
-                        <button type="submit" class="btn btn-success">Submit Payment</button>
-                    </form>
-                    
-                    {% endif %}
-                </div>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <span>Invoice Detail for {{ invoice.company.company_name }}</span>
+        </div>
+        <div class="card-body">
+            <div class="content">
+                <!-- Invoice Details Section -->
+                <p><strong>Item:</strong> {{ invoice.item.item_name }}</p>
+                <p><strong>Quantity Purchased:</strong> {{ invoice.quantity_purchased }}</p>
+                <p><strong>Total Cost:</strong> EGP{{ invoice.total_cost }}</p>
+                <p><strong>Total Paid:</strong> EGP{{ invoice.total_paid }}</p>
+                <p><strong>Total Due:</strong> EGP{{ total_due }}</p>
+                <p><strong>Payment Method:</strong> {{ invoice.payment_method }}</p>
+                <a href="{% url 'invoice_list' %}" class="btn btn-primary">Back to Invoice List</a>
+
+                {% if invoice.payment_method == 'Installments' %}
+                <!-- Payment History Section -->
+                <hr>
+                <h3>Payment History</h3>
+                {% if invoice.payments %}
+                    <ul>
+                        {% for payment in invoice.payments %}
+                            <li><strong>Amount:</strong> EGP{{ payment.amount }}, <strong>Date:</strong> {{ payment.date }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No payments made yet.</p>
+                {% endif %}
+
+                <!-- Add New Payment Section -->
+                <hr>
+                <h3>Add New Payment</h3>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="payment_amount">Payment Amount:</label>
+                        <input type="number" name="payment_amount" class="form-control" id="payment_amount" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Submit Payment</button>
+                </form>
+                {% endif %}
             </div>
         </div>
     </div>
-</body>
-</html>
+</div>
 {% endblock %}

@@ -693,10 +693,34 @@ def create_invoice(request):
     return render(request, 'web/create_invoice.html', {'form': form})
 
 
+
+
 def invoice_detail_view(request, id):
+    """
+    View to display invoice details and process payments.
+    """
     invoice = get_object_or_404(Invoice, id=id)
     total_due = invoice.total_cost - invoice.total_paid
-    return render(request, 'web/invoice_detail.html', {'invoice': invoice, 'total_due': total_due})
+
+    if request.method == 'POST':
+        payment_amount = request.POST.get('payment_amount')
+
+        if not payment_amount or Decimal(payment_amount) <= 0:
+            messages.error(request, 'Invalid payment amount.')
+            return redirect('invoice_detail', id=id)
+
+        try:
+            invoice.make_payment(amount=Decimal(payment_amount))
+            messages.success(request, 'Payment processed successfully.')
+        except ValueError as e:
+            messages.error(request, str(e))
+
+        return redirect('invoice_detail', id=id)
+
+    return render(request, 'web/invoice_detail.html', {
+        'invoice': invoice,
+        'total_due': total_due,
+    })
 
 
 def add_payment_view(request, id):
@@ -771,8 +795,33 @@ def edit_company(request, company_id):
 def company_detail(request, company_id):
     company = get_object_or_404(Companies, id=company_id)
     items = Inventory.objects.filter(company_source=company)
-    invoice = Invoice.objects.filter(company=company)
-    return render(request, 'web/company_detail.html', {'company': company,'items':items,'invoice':invoice})
+
+    # Handle the time frame filter
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Convert string dates to datetime objects
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            invoices = Invoice.objects.filter(company=company, created_at__range=[start_date, end_date])
+        except ValueError:
+            invoices = Invoice.objects.filter(company=company)
+    else:
+        invoices = Invoice.objects.filter(company=company)
+
+    # Calculate total due and total paid
+    total_due = sum(invoice.total_cost - invoice.total_paid for invoice in invoices)
+    total_paid = sum(invoice.total_paid for invoice in invoices)
+
+    return render(request, 'web/company_detail.html', {
+        'company': company,
+        'items': items,
+        'invoices': invoices,
+        'total_due': total_due,
+        'total_paid': total_paid,
+    })
 
 
 def delete_company(request, company_id):
@@ -789,29 +838,27 @@ def delete_company(request, company_id):
 
 
 def statistics_view(request):
-    # جلب البيانات من الـ GET لتحديد الفترات الزمنية
-    time_frame = request.GET.get('time_frame', 'all')  # الخيارات: اليوم، الأسبوع، الشهر، السنة
-    start_date = request.GET.get('start_date', None)
-    end_date = request.GET.get('end_date', None)
-    
-    # معالجة الفترات الزمنية
-    now = datetime.now()
-    if time_frame == 'day':
-        start_date = now - timedelta(days=1)
-    elif time_frame == 'week':
-        start_date = now - timedelta(weeks=1)
-    elif time_frame == 'month':
-        start_date = now - timedelta(days=30)
-    elif time_frame == 'year':
-        start_date = now - timedelta(days=365)
-    
-    # فلترة البيانات بناءً على الفترات الزمنية
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    # Ensure dates are parsed correctly if provided
     if start_date and end_date:
-        reserves_filter = Reserve.objects.filter(date__range=[start_date, end_date])
-        invoices_filter = Invoice.objects.filter(created_at__range=[start_date, end_date])
-    else:
-        reserves_filter = Reserve.objects.all()
-        invoices_filter = Invoice.objects.all()
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        except ValueError:
+            start_date = None
+            end_date = None
+
+    # Define time filter if dates are provided
+    time_filter = {'created_at__range': (start_date, end_date)} if start_date and end_date else {}
+
+    # فلترة البيانات بناءً على الفترات الزمنية
+    reserves_filter = Reserve.objects.filter(**time_filter) if time_filter else Reserve.objects.all()
+    invoices_filter = Invoice.objects.filter(**time_filter) if time_filter else Invoice.objects.all()
+    payments_filter = Payment.objects.filter(**time_filter) if time_filter else Payment.objects.all()
+    payment_services_filter = PaymentService.objects.filter(payment__created_at__range=(start_date, end_date)) if time_filter else PaymentService.objects.all()
+    payment_inventory_filter = PaymentInventory.objects.filter(payment__created_at__range=(start_date, end_date)) if time_filter else PaymentInventory.objects.all()
 
     # إحصائيات الشركات
     total_companies = Companies.objects.count()
@@ -835,11 +882,11 @@ def statistics_view(request):
     )['total_used'] or 0
 
     # إحصائيات المدفوعات
-    total_payments = Payment.objects.count()
-    total_paid_services = PaymentService.objects.aggregate(
+    total_payments = payments_filter.count()
+    total_paid_services = payment_services_filter.aggregate(
         total_paid_services=Sum(F('quantity') * F('price_at_time_of_payment'))
     )['total_paid_services'] or 0
-    total_paid_inventory = PaymentInventory.objects.aggregate(
+    total_paid_inventory = payment_inventory_filter.aggregate(
         total_paid_inventory=Sum(F('quantity') * F('price_at_time_of_payment'))
     )['total_paid_inventory'] or 0
     total_paid = total_paid_services + total_paid_inventory
@@ -892,6 +939,8 @@ def statistics_view(request):
         'pending_reserves_by_branch': pending_reserves_by_branch,
         'cancelled_reserves_by_branch': cancelled_reserves_by_branch,
         'inventory_details': inventory_details,
+        'start_date': start_date,
+        'end_date': end_date,
     }
 
     return render(request, 'web/statistics.html', context)
@@ -966,89 +1015,181 @@ def service_delete(request, pk):
 def branch(request):
     return render(request, 'web/Branches.html')
 
+
+
 def ElMohandseen_branch(request):
-    # جلب الحجوزات الخاصة بفرع المهندسين
-    reservations = Reserve.objects.filter(Branch='EL_Mohandsen')
-    
-    # جلب الفواتير الخاصة بفرع المهندسين
-    invoices = Payment.objects.filter(Branch='EL_Mohandsen')
-    
-  
+    # جلب التاريخ الذي تم اختياره من المستخدم
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
 
+    # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-    # حساب الكميات المستهلكة من المخزون لفرع المهندسين
-    inventory_usage = PaymentInventory.objects.filter(payment__Branch='EL_Mohandsen').values(
-        'inventory__item_name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الحجوزات الخاصة بفرع المهندسين ضمن النطاق الزمني المحدد
+            reservations = Reserve.objects.filter(Branch='EL_Mohandsen', date__range=[start_date, end_date])
 
-    # حساب الكميات المستهلكة من الخدمات لفرع المهندسين
-    service_usage = PaymentService.objects.filter(payment__Branch='EL_Mohandsen').values(
-        'service__name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الفواتير الخاصة بفرع المهندسين ضمن النطاق الزمني المحدد
+            invoices = Payment.objects.filter(Branch='EL_Mohandsen', created_at__range=[start_date, end_date])
+
+            # حساب الكميات المستهلكة من المخزون لفرع المهندسين ضمن النطاق الزمني المحدد
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='EL_Mohandsen', payment__created_at__range=[start_date, end_date]).values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+
+            # حساب الكميات المستهلكة من الخدمات لفرع المهندسين ضمن النطاق الزمني المحدد
+            service_usage = PaymentService.objects.filter(payment__Branch='EL_Mohandsen', payment__created_at__range=[start_date, end_date]).values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+        except ValueError:
+            reservations = Reserve.objects.filter(Branch='EL_Mohandsen')
+            invoices = Payment.objects.filter(Branch='EL_Mohandsen')
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='EL_Mohandsen').values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+            service_usage = PaymentService.objects.filter(payment__Branch='EL_Mohandsen').values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+    else:
+        reservations = Reserve.objects.filter(Branch='EL_Mohandsen')
+        invoices = Payment.objects.filter(Branch='EL_Mohandsen')
+        inventory_usage = PaymentInventory.objects.filter(payment__Branch='EL_Mohandsen').values(
+            'inventory__item_name'
+        ).annotate(total_quantity_used=Sum('quantity'))
+        service_usage = PaymentService.objects.filter(payment__Branch='EL_Mohandsen').values(
+            'service__name'
+        ).annotate(total_quantity_used=Sum('quantity'))
 
     context = {
         'reservations': reservations,
         'invoices': invoices,
         'inventory_usage': inventory_usage,
         'service_usage': service_usage,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
-    
+
     return render(request, 'web/ElMohandseen_branch.html', context)
-    
 
 
 def fifeth_sattelmant_branch(request):
-    
-    reservations = Reserve.objects.filter(Branch='5th_sattelment')
-    
+    # جلب التاريخ الذي تم اختياره من المستخدم
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
 
-    invoices = Payment.objects.filter(Branch='5th_sattelment')
-    
+    # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-    inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment').values(
-        'inventory__item_name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الحجوزات الخاصة بفرع الخامس ضمن النطاق الزمني المحدد
+            reservations = Reserve.objects.filter(Branch='5th_sattelment', date__range=[start_date, end_date])
 
-    
-    service_usage = PaymentService.objects.filter(payment__Branch='5th_sattelment').values(
-        'service__name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الفواتير الخاصة بفرع الخامس ضمن النطاق الزمني المحدد
+            invoices = Payment.objects.filter(Branch='5th_sattelment', created_at__range=[start_date, end_date])
+
+            # حساب الكميات المستهلكة من المخزون لفرع الخامس ضمن النطاق الزمني المحدد
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment', payment__created_at__range=[start_date, end_date]).values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+
+            # حساب الكميات المستهلكة من الخدمات لفرع الخامس ضمن النطاق الزمني المحدد
+            service_usage = PaymentService.objects.filter(payment__Branch='5th_sattelment', payment__created_at__range=[start_date, end_date]).values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+        except ValueError:
+            reservations = Reserve.objects.filter(Branch='5th_sattelment')
+            invoices = Payment.objects.filter(Branch='5th_sattelment')
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment').values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+            service_usage = PaymentService.objects.filter(payment__Branch='5th_sattelment').values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+    else:
+        reservations = Reserve.objects.filter(Branch='5th_sattelment')
+        invoices = Payment.objects.filter(Branch='5th_sattelment')
+        inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment').values(
+            'inventory__item_name'
+        ).annotate(total_quantity_used=Sum('quantity'))
+        service_usage = PaymentService.objects.filter(payment__Branch='5th_sattelment').values(
+            'service__name'
+        ).annotate(total_quantity_used=Sum('quantity'))
 
     context = {
         'reservations': reservations,
         'invoices': invoices,
         'inventory_usage': inventory_usage,
         'service_usage': service_usage,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
-    return render(request, 'web/fifeth_sattelmant_branch.html',context)
+
+    return render(request, 'web/fifeth_sattelmant_branch.html', context)
+
+
 
 
 
 def naser_city_branch(request):
-    
-    reservations = Reserve.objects.filter(Branch='Naser_city')
-    
+    # جلب التاريخ الذي تم اختياره من المستخدم
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
 
-    invoices = Payment.objects.filter(Branch='Naser_city')
-    
+    # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-    inventory_usage = PaymentInventory.objects.filter(payment__Branch='Naser_city').values(
-        'inventory__item_name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الحجوزات الخاصة بفرع مدينة نصر ضمن النطاق الزمني المحدد
+            reservations = Reserve.objects.filter(Branch='Naser_city', date__range=[start_date, end_date])
 
-    
-    service_usage = PaymentService.objects.filter(payment__Branch='Naser_city').values(
-        'service__name'
-    ).annotate(total_quantity_used=Sum('quantity'))
+            # جلب الفواتير الخاصة بفرع مدينة نصر ضمن النطاق الزمني المحدد
+            invoices = Payment.objects.filter(Branch='Naser_city', created_at__range=[start_date, end_date])
+
+            # حساب الكميات المستهلكة من المخزون لفرع مدينة نصر ضمن النطاق الزمني المحدد
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='Naser_city', payment__created_at__range=[start_date, end_date]).values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+
+            # حساب الكميات المستهلكة من الخدمات لفرع مدينة نصر ضمن النطاق الزمني المحدد
+            service_usage = PaymentService.objects.filter(payment__Branch='Naser_city', payment__created_at__range=[start_date, end_date]).values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+        except ValueError:
+            reservations = Reserve.objects.filter(Branch='Naser_city')
+            invoices = Payment.objects.filter(Branch='Naser_city')
+            inventory_usage = PaymentInventory.objects.filter(payment__Branch='Naser_city').values(
+                'inventory__item_name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+            service_usage = PaymentService.objects.filter(payment__Branch='Naser_city').values(
+                'service__name'
+            ).annotate(total_quantity_used=Sum('quantity'))
+    else:
+        reservations = Reserve.objects.filter(Branch='Naser_city')
+        invoices = Payment.objects.filter(Branch='Naser_city')
+        inventory_usage = PaymentInventory.objects.filter(payment__Branch='Naser_city').values(
+            'inventory__item_name'
+        ).annotate(total_quantity_used=Sum('quantity'))
+        service_usage = PaymentService.objects.filter(payment__Branch='Naser_city').values(
+            'service__name'
+        ).annotate(total_quantity_used=Sum('quantity'))
 
     context = {
         'reservations': reservations,
         'invoices': invoices,
         'inventory_usage': inventory_usage,
         'service_usage': service_usage,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
 
     return render(request, 'web/naser_city_branch.html', context)
+
 
 
 

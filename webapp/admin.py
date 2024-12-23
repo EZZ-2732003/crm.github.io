@@ -50,10 +50,12 @@ class PaymentAdmin(admin.ModelAdmin):
     inlines = [PaymentServiceInline, PaymentInventoryInline]  # تضمين النماذج الفرعية للخدمات والمنتجات
 
 # تسجيل نموذج Invoice
+
 class InvoiceAdmin(admin.ModelAdmin):
-    list_display = ('company', 'item', 'quantity_purchased', 'quantity_used', 'purchase_date', 'total_cost')
-    search_fields = ('company__company_name', 'item__item_name')
-    list_filter = ('company', 'purchase_date')
+    list_display = ['company', 'item', 'total_cost', 'payment_method', 'is_fully_paid', 'remaining_amount']
+    list_filter = ['payment_method', 'is_fully_paid']
+    search_fields = ['company__company_name', 'item__item_name']
+    readonly_fields = ['total_paid', 'remaining_amount', 'due_dates', 'payments']
 
 # تسجيل نموذج Medical_History
 class MedicalHistoryAdmin(admin.ModelAdmin):

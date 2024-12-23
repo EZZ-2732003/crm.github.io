@@ -171,7 +171,7 @@
                             <th>Item</th>
                             <th>Quantity Purchased</th>
                             <th>Total Paid</th>
-                            
+                            <th>Status</th>
                             <th>Date</th>
                             <th>Total Cost</th>
                             <th>Actions</th>
@@ -184,6 +184,13 @@
                             <td>{{ invoice.item.item_name }}</td>
                             <td>{{ invoice.quantity_purchased }}unit</td>
                             <td>{{ invoice.total_paid }}EGP</td>
+                            <td>
+                                {% if invoice.total_paid >= invoice.total_cost %}
+                                <span class="badge badge-success">Paid</span>
+                                {% else %}
+                                <span class="badge badge-danger">Unpaid</span>
+                                {% endif %}
+                            </td>
                             <td>{{ invoice.purchase_date }}</td>
                             <td>{{ invoice.total_cost }}EGP</td>
                             <td>

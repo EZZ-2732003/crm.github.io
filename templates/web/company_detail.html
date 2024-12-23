@@ -1,17 +1,16 @@
 {% extends 'base.html' %}
+
 {% block content %}
-
 <!DOCTYPE html>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Company Details</title>
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 
 <style>
-    /* الهوية البصرية الأساسية */
+    /* Custom styles */
     body {
-        background: linear-gradient(120deg, #ffffff, #f9e1e7); /* الخلفية المتدرجة */
+        background: linear-gradient(120deg, #ffffff, #f9e1e7); /* Background gradient */
         font-family: 'Arial', sans-serif;
         margin: 0;
         padding: 0;
@@ -23,15 +22,15 @@
 
     .card {
         margin-bottom: 20px;
-        border-radius: 10px; /* زوايا دائرية */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow for depth */
         transition: all 0.3s ease-in-out;
     }
 
     .card-header {
         font-weight: bold;
-        background-color: #f9e1e7; /* استخدام لون الخلفية */
-        color: #b88b4a; /* اللون الذهبي */
+        background-color: #f9e1e7; /* Background color */
+        color: #b88b4a; /* Golden color */
         border-radius: 10px 10px 0 0;
         padding: 15px 20px;
     }
@@ -42,19 +41,7 @@
 
     .company-info span {
         font-weight: bold;
-        color: #b88b4a; /* اللون الذهبي */
-    }
-
-    .btn-primary {
-        background-color: #ff6699;
-        border: none;
-        color: white;
-        border-radius: 8px;
-        transition: background-color 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        background-color: #ff3366;
+        color: #b88b4a; /* Golden color */
     }
 
     h1 {
@@ -64,7 +51,7 @@
         text-align: center;
     }
 
-    /* تحسين العرض على الهواتف */
+    /* Responsive design */
     @media (max-width: 768px) {
         .card {
             padding: 10px;
@@ -77,19 +64,45 @@
 </style>
 
 <div class="container">
+    <!-- Time frame filter form -->
+    <form method="get" class="mb-3">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="date" name="start_date" class="form-control" placeholder="Start Date" value="{{ request.GET.start_date }}">
+            </div>
+            <div class="col-md-4">
+                <input type="date" name="end_date" class="form-control" placeholder="End Date" value="{{ request.GET.end_date }}">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Company Information Card -->
     <div class="card">
         <div class="card-header">
             Company Information
         </div>
         <div class="card-body company-info">
             <h1>{{ company.company_name }}</h1>
-            <p><span>Address</span> {{ company.company_address }}</p>
-            <p><span>Phone</span> {{ company.company_phone }}</p>
-            
+            <p><span>Address:</span> {{ company.company_address }}</p>
+            <p><span>Phone:</span> {{ company.company_phone }}</p>
         </div>
     </div>
 
-    <!-- عرض المخزون الخاص بالشركة -->
+    <!-- Financial Overview Card -->
+    <div class="card">
+        <div class="card-header">
+            Financial Overview
+        </div>
+        <div class="card-body">
+            <p><strong>Total Paid:</strong> {{ total_paid }} EGP</p>
+            <p><strong>Total Due:</strong> {{ total_due }} EGP</p>
+        </div>
+    </div>
+
+    <!-- Inventory Information Card -->
     <div class="card">
         <div class="card-header">
             Inventory Information
@@ -100,7 +113,6 @@
                     <tr>
                         <th>Item Name</th>
                         <th>Quantity</th>
-                        <th>Price</th>
                         <th>Cost</th>
                     </tr>
                 </thead>
@@ -109,12 +121,11 @@
                         <tr>
                             <td>{{ item.item_name }}</td>
                             <td>{{ item.item_quantity }}</td>
-                            <td>{{ item.item_price }} EGP</td>
                             <td>{{ item.item_cost }} EGP</td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="4">No inventory items available for this company.</td>
+                            <td colspan="3">No inventory items available for this company.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -122,7 +133,7 @@
         </div>
     </div>
 
-    <!-- عرض الفواتير الخاصة بالشركة -->
+    <!-- Invoice Information Card -->
     <div class="card">
         <div class="card-header">
             Invoice Information
@@ -134,22 +145,30 @@
                         <th>Purchase Date</th>
                         <th>Item</th>
                         <th>Quantity Purchased</th>
-                        <th>Quantity Used</th>
+                        <th>Status</th>
+                        <th>Total Paid</th>
                         <th>Total Cost</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for inv in invoice %}
+                    {% for inv in invoices %}
                         <tr>
                             <td>{{ inv.purchase_date }}</td>
                             <td>{{ inv.item.item_name }}</td>
                             <td>{{ inv.quantity_purchased }}</td>
-                            <td>{{ inv.quantity_used }}</td>
+                            <td>
+                                {% if inv.total_paid >= inv.total_cost %}
+                                <span class="badge badge-success">Paid</span>
+                                {% else %}
+                                <span class="badge badge-danger">Unpaid</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ inv.total_paid }} EGP</td>
                             <td>{{ inv.total_cost }} EGP</td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5">No invoices available for this company.</td>
+                            <td colspan="6">No invoices available for this company.</td>
                         </tr>
                     {% endfor %}
                 </tbody>

@@ -23,7 +23,7 @@
               <th>Service</th>
               <th>Quantity</th>
               <th>Price</th>
-              <th>Total</th>
+              
             </tr>
           </thead>
           <tbody id="services-list">
@@ -32,7 +32,7 @@
               <td>{{ form.service|as_crispy_field }}</td>
               <td>{{ form.quantity|as_crispy_field }}</td>
               <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
-              <td class="service-total">{{ form.price_at_time_of_payment.value|floatformat:2|add:form.quantity.value|floatformat:2 }}</td>
+              
             </tr>
             {% endfor %}
           </tbody>
@@ -50,7 +50,7 @@
               <th>Product</th>
               <th>Quantity</th>
               <th>Price</th>
-              <th>Total</th>
+              
             </tr>
           </thead>
           <tbody id="products-list">
@@ -59,7 +59,7 @@
               <td>{{ form.inventory|as_crispy_field }}</td>
               <td>{{ form.quantity|as_crispy_field }}</td>
               <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
-              <td class="product-total">{{ form.price_at_time_of_payment.value|floatformat:2|add:form.quantity.value|floatformat:2 }}</td>
+              
             </tr>
             {% endfor %}
           </tbody>
@@ -68,9 +68,7 @@
       </fieldset>
 
       <!-- Total Section -->
-      <div class="total-section mb-4">
-        <h3>Total Amount: <span id="total-payment">{{ total_payment }}</span></h3>
-      </div>
+      
 
       <button type="submit" class="btn btn-primary">Submit Payment</button>
     </form>

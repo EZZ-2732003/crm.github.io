@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -56,7 +56,7 @@ class Reserve(models.Model):
     time = models.CharField(max_length=10)
     
     notes = models.CharField(max_length=1000, default='notes')
-    create_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     Branch = models.CharField(max_length=50, choices=BRANCH_CHOICES, default='Branch')
 
@@ -72,7 +72,7 @@ class Reserve(models.Model):
             self.save()
 
     class Meta:
-        ordering = ['-create_at']
+        ordering = ['-created_at']
 
     def save(self, *args, **kwargs):
         # تحقق من حالة الحجز قبل حفظ الكائن
@@ -189,10 +189,12 @@ class Payment(models.Model):
 
 
 class PaymentService(models.Model):
+    
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price_at_time_of_payment = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # السعر وقت الدفع
+    created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"{self.quantity} x {self.service.name} for {self.payment}"
 
@@ -204,10 +206,12 @@ class PaymentService(models.Model):
 
 
 class PaymentInventory(models.Model):
+    
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
     inventory = models.ForeignKey(Inventory, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price_at_time_of_payment = models.DecimalField(max_digits=10, decimal_places=2, default=0)   # السعر وقت الفاتورة
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.quantity} x {self.inventory.item_name} for {self.payment}"
@@ -236,63 +240,72 @@ class offers(models.Model):
 
 class Invoice(models.Model):
     PAYMENT_METHODS = [
-        ('Immediate', 'Immediate Payment'),
-        ('Deferred', 'Deferred Payment'),
+        ('Cash', 'Cash Payment'),
+        ('Installments', 'Installment Payment'),
     ]
     company = models.ForeignKey(Companies, on_delete=models.CASCADE, related_name='invoices')
     item = models.ForeignKey(Inventory, on_delete=models.CASCADE, related_name='invoices')
     quantity_purchased = models.IntegerField()
-    quantity_used = models.IntegerField(default=0)  # الكمية المستخدمة
-    purchase_date = models.DateField(auto_now_add=True)
+    quantity_used = models.IntegerField(default=0)
+    created_at = models.DateField(auto_now_add=True)
     total_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS, default='Immediate')  # طريقة الدفع
-    is_fully_paid = models.BooleanField(default=False)  # حالة الدفع الكلي
-    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # المبلغ المدفوع
-    due_dates = models.JSONField(null=True, blank=True)  # مواعيد الدفعات
-    payments = models.JSONField(null=True, blank=True)  # قيم الدفعات
+    payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='Cash')
+    is_fully_paid = models.BooleanField(default=False)
+    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    remaining_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    installments_count = models.IntegerField(null=True, blank=True)
+    due_dates = models.JSONField(null=True, blank=True)
+    payments = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"Invoice for {self.quantity_purchased} of {self.item.item_name} from {self.company.company_name}"
 
     def save(self, *args, **kwargs):
-        """زيادة المخزون عند شراء منتجات جديدة"""
-        if not self.pk:  # في حالة إنشاء الفاتورة للمرة الأولى
-            self.item.increase_quantity(self.quantity_purchased)
+        if not self.pk:  # إنشاء فاتورة جديدة
+            if self.payment_method == 'Cash':
+                self.total_paid = self.total_cost
+                self.remaining_amount = 0
+                self.is_fully_paid = True
+            elif self.payment_method == 'Installments' and self.installments_count:
+                self.remaining_amount = self.total_cost
+                self.due_dates = self.generate_installment_due_dates()
         super().save(*args, **kwargs)
 
-    def use_item(self, quantity_used):
-        """تقليل الكمية المستخدمة من الفاتورة"""
-        if self.quantity_used + quantity_used > self.quantity_purchased:
-            raise ValueError("Cannot use more than purchased quantity")
-        self.quantity_used += quantity_used
-        self.item.reduce_quantity(quantity_used)
-        self.save()
+    def generate_installment_due_dates(self):
+        """حساب مواعيد الدفع بناءً على عدد الأقساط"""
+        due_dates = []
+        today = datetime.now().date()
+        for i in range(self.installments_count):
+            due_date = today + timedelta(days=(30 * (i + 1)))
+            due_dates.append(str(due_date))
+        return due_dates
 
     def make_payment(self, amount, date=None):
         """تسجيل دفعة جديدة وتحديث حالة الفاتورة"""
         if self.is_fully_paid:
             raise ValueError("Invoice is already fully paid")
+
         if self.payments is None:
             self.payments = []
-        if self.due_dates is None:
-            self.due_dates = []
-        self.total_paid += Decimal(amount)  # تأكد من استخدام decimal.Decimal
+
+        self.total_paid += Decimal(amount)
+        self.remaining_amount = self.total_cost - self.total_paid
+
         self.payments.append({
-            'amount': str(amount),  # تحويل المبلغ إلى نص لضمان التوافق
-            'date': date or str(datetime.now().date())  # إضافة التاريخ تلقائيًا
+            'amount': str(amount),
+            'date': date or str(datetime.now().date()),
         })
-        # إذا تم سداد المبلغ بالكامل
-        if self.total_paid >= self.total_cost:
+
+        if self.remaining_amount <= 0:
             self.is_fully_paid = True
+
         self.save()
 
-    def add_due_date(self, date):
-        """إضافة موعد جديد للدفع في حالة الدفع الأجل"""
-        if self.due_dates is None:
-            self.due_dates = []
-        self.due_dates.append(date)
-        self.save()
-
+    def get_installment_amount(self):
+        """حساب قيمة كل قسط"""
+        if self.payment_method == 'Installments' and self.installments_count:
+            return self.total_cost / self.installments_count
+        return None
 
 class Medical_History(models.Model):
     patient = models.ForeignKey(patient, on_delete=models.CASCADE)
