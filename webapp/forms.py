@@ -7,6 +7,7 @@ from django.forms import inlineformset_factory
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from .models import Reserve
+from django_select2.forms import Select2Widget
 
 
 
@@ -85,7 +86,7 @@ class CompanyForm(forms.ModelForm):
 class InventoryForm(forms.ModelForm):
     class Meta:
         model = Inventory
-        fields = ['item_name', 'item_quantity', 'item_cost', 'company_source']
+        fields = ['item_name', 'item_quantity', 'item_cost','item_price', 'company_source']
         
         
         
@@ -99,32 +100,58 @@ from django.forms import inlineformset_factory
 from .models import Payment, PaymentService, PaymentInventory
 
 class PaymentForm(forms.ModelForm):
+    """Form for creating and updating Payment instances."""
     class Meta:
         model = Payment
-        fields = ['patient','Branch', 'status', 'method']
+        fields = ['patient', 'Branch', 'status', 'method', 'type']
+        widgets = {
+            'patient': forms.TextInput(attrs={'class': 'form-control'}),
+            'Branch': forms.Select(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'method': forms.Select(attrs={'class': 'form-control'}),
+            'type': forms.Select(attrs={'class': 'form-control'})
+        }
+        
 
-# لإنشاء عدة إدخالات للخدمات
+# Form for adding or editing PaymentService entries
 class PaymentServiceForm(forms.ModelForm):
     class Meta:
         model = PaymentService
-        fields = ['service', 'quantity', 'price_at_time_of_payment']  # إضافة الحقل للسعر
+        fields = ['service', 'quantity', ]
+        widgets = {
+            'service': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'price_at_time_of_payment': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+        help_texts = {
+            'price_at_time_of_payment': 'Enter the price of the service at the time of payment.',
+        }
 
+# Form for adding or editing PaymentInventory entries
 class PaymentInventoryForm(forms.ModelForm):
     class Meta:
         model = PaymentInventory
-        fields = ['inventory', 'quantity', 'price_at_time_of_payment']  # إضافة الحقل للسعر
+        fields = ['inventory', 'quantity', ]
+        widgets = {
+            'inventory': forms.Select(attrs={'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'price_at_time_of_payment': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+        help_texts = {
+            'price_at_time_of_payment': 'Enter the price of the inventory item at the time of payment.',
+        }
 
-# لإنشاء عدة إدخالات للخدمات
+# Inline formset for PaymentService
 PaymentServiceFormSet = inlineformset_factory(
-    Payment, PaymentService, 
-    form=PaymentServiceForm,  # استخدام النموذج المعدل
+    Payment, PaymentService,
+    form=PaymentServiceForm,
     extra=1, can_delete=True
 )
 
-# لإنشاء عدة إدخالات للمنتجات
+# Inline formset for PaymentInventory
 PaymentInventoryFormSet = inlineformset_factory(
-    Payment, PaymentInventory, 
-    form=PaymentInventoryForm,  # استخدام النموذج المعدل
+    Payment, PaymentInventory,
+    form=PaymentInventoryForm,
     extra=1, can_delete=True
 )
 
@@ -172,7 +199,89 @@ class ServiceForm(forms.ModelForm):
         model = Service
         fields = ['name', 'price']        
 
-class OffersForm(forms.ModelForm):
+
+class OfferForm(forms.ModelForm):
     class Meta:
-        model=offers
-        fields = ['offer_name','discount_percentage']        
+        model = offers
+        fields = ['name', 'valid_from', 'valid_to']
+
+    valid_from = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'date-picker', 'placeholder': 'Select start date'}),
+        required=True
+    )
+    valid_to = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'date-picker', 'placeholder': 'Select end date'}),
+        required=True
+    )
+
+class OfferServiceForm(forms.ModelForm):
+    class Meta:
+        model = OfferService
+        fields = ['service', 'discount_percentage', 'discount_amount']
+
+    service = forms.ModelChoiceField(
+        queryset=Service.objects.all(),
+        widget=Select2Widget(attrs={'placeholder': 'Search for a service...'}),
+        required=True
+    )
+    discount_percentage = forms.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Enter discount %'})
+    )
+    discount_amount = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Enter discount amount'})
+    )
+
+
+class OfferInventoryForm(forms.ModelForm):
+    class Meta:
+        model = OfferInventory
+        fields = ['inventory', 'discount_percentage', 'discount_amount']
+
+    inventory = forms.ModelChoiceField(
+        queryset=Inventory.objects.all(),
+        widget=Select2Widget(attrs={'placeholder': 'Search for an inventory item...'}),
+        required=True
+    )
+    discount_percentage = forms.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Enter discount %'})
+    )
+    discount_amount = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'placeholder': 'Enter discount amount'})
+    )
+
+
+# Inline formsets for adding multiple services or inventory items
+OfferServiceFormSet = inlineformset_factory(
+    offers, OfferService, form=OfferServiceForm, extra=1, can_delete=True
+)
+
+OfferInventoryFormSet = inlineformset_factory(
+    offers, OfferInventory, form=OfferInventoryForm, extra=1, can_delete=True
+)
+
+
+class FinanceForm(forms.ModelForm):
+    class Meta:
+        model = Finance
+        fields = ['transaction_type', 'amount', 'description', 'related_payment', 'related_invoice']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+            'transaction_type': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'related_payment': forms.Select(attrs={'class': 'form-control'}),
+            'related_invoice': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+        

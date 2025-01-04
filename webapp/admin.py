@@ -72,4 +72,5 @@ admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Invoice, InvoiceAdmin)
 admin.site.register(Medical_History, MedicalHistoryAdmin)
 admin.site.register(UserActivity)
+admin.site.register(Finance)
 

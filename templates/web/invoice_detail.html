@@ -4,6 +4,7 @@
     <div class="card">
         <div class="card-header">
             <span>Invoice Detail for {{ invoice.company.company_name }}</span>
+            
         </div>
         <div class="card-body">
             <div class="content">
@@ -15,6 +16,7 @@
                 <p><strong>Total Due:</strong> EGP{{ total_due }}</p>
                 <p><strong>Payment Method:</strong> {{ invoice.payment_method }}</p>
                 <a href="{% url 'invoice_list' %}" class="btn btn-primary">Back to Invoice List</a>
+                
 
                 {% if invoice.payment_method == 'Installments' %}
                 <!-- Payment History Section -->

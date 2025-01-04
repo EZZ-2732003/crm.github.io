@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4"><i class="fas fa-coins me-2"></i>Finance Transactions</h2>
+
+    <!-- Summary Boxes -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-arrow-up text-success me-2"></i>Total Income</h5>
+                    <p class="card-text text-success fs-5">{{ total_income }}EGP</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-arrow-down text-danger me-2"></i>Total Expense</h5>
+                    <p class="card-text text-danger fs-5">{{ total_expense }}EGP</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-undo text-primary me-2"></i>Total Refund</h5>
+                    <p class="card-text text-primary fs-5">{{ total_refund }}EGP</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-balance-scale text-info me-2"></i>Net Profit</h5>
+                    <p class="card-text text-info fs-5">{{ net_profit }}EGP</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="get" class="row gy-2 gx-3 align-items-center mb-4">
+        <div class="col-auto">
+            <label for="start_date" class="form-label">Start Date:</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control">
+        </div>
+        <div class="col-auto">
+            <label for="end_date" class="form-label">End Date:</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter me-2"></i>Filter
+            </button>
+        </div>
+        <div class="col-auto">
+            <button type="submit" name="export_pdf" value="true" class="btn btn-success w-100">Download as PDF</button>
+        </div>
+    </form>
+
+    <!-- Transactions Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Related Payment</th>
+                    <th>Related Invoice</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for finance in finances %}
+                <tr>
+                    <td>{{ finance.id }}</td>
+                    <td>
+                        <span class="badge {% if finance.transaction_type == 'Income' %}bg-success{% elif finance.transaction_type == 'Expense' %}bg-danger{% else %}bg-primary{% endif %}">
+                            <i class="fas {% if finance.transaction_type == 'Income' %}fa-arrow-up{% elif finance.transaction_type == 'Expense' %}fa-arrow-down{% else %}fa-undo{% endif %} me-1"></i>
+                            {{ finance.transaction_type }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if finance.amount < 0 %}
+                        <span class="text-danger">EGP{{ finance.amount }}</span>
+                        {% else %}
+                        <span class="text-success">EGP{{ finance.amount }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ finance.description|default:"N/A" }}</td>
+                    <td>
+                        {% if finance.related_payment %}
+                        <i class="fas fa-credit-card me-1"></i> Payment #{{ finance.related_payment.id }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if finance.related_invoice %}
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Invoice #{{ finance.related_invoice.id }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ finance.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No transactions found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

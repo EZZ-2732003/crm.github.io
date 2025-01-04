@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Noura Fouad Clinics CRM</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
     <style>/* General Reset */
         html, body {
             height: 100%;
@@ -18,13 +20,32 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         /* Navbar */
         .navbar {
             margin-bottom: 30px;
             background-color: #fbe4e8; /* لون خلفية فاتح للبار */
         }
-        
+
+        /* Welcome Screen */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff5f8;
+            z-index: 9999;
+        }
+
+        #welcome-screen #lottie-animation {
+            width: 100%;
+            height: 100%;
+        }
+
         /* Hero Section */
         .hero-section {
             background-color: #fff5f8; /* خلفية بيضاء زهري */
@@ -33,8 +54,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
         }
         
+        .hero-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .hero-section h1 {
             font-size: 2.5em;
             font-weight: bold;
@@ -60,12 +89,26 @@
         .feature {
             background-color: #f9e1e7; /* خلفية بيضاء زهري فاتحة */
             padding: 40px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease 0.2s;
+        }
+
+        .feature.show {
+            opacity: 1;
+            transform: translateY(0);
         }
         
         .feature h3 {
             color: #8A6B55; /* لون داكن للأكسر */
             font-weight: bold;
             margin-bottom: 15px;
+        }
+
+        .feature i {
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 10px;
         }
         
         .feature p {
@@ -105,10 +148,14 @@
         .footer p {
             margin: 0;
         }
-        
     </style>
 </head>
 <body>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div id="lottie-animation"></div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -127,15 +174,18 @@
     <section class="feature">
         <div class="container">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-users"></i>
                     <h3>Patient Management</h3>
                     <p>Easily manage patient appointments, records, and history.</p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-file-invoice-dollar"></i>
                     <h3>Billing & Invoicing</h3>
                     <p>Automate billing processes and keep track of payments.</p>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-shield-alt"></i>
                     <h3>Secure Data Storage</h3>
                     <p>All your data is securely stored and easily accessible.</p>
                 </div>
@@ -153,6 +203,25 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Initialize Lottie Animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const animation = lottie.loadAnimation({
+                container: document.getElementById('lottie-animation'), // The container element
+                renderer: 'svg',
+                loop: false, // Disable looping
+                autoplay: true,
+                path: '/static/Logo-4-[remix].json' // Replace with the correct path
+            });
+
+            // Hide the welcome screen when the animation is complete
+            animation.addEventListener('complete', () => {
+                document.getElementById('welcome-screen').style.display = 'none';
+                document.querySelector('.hero-section').classList.add('show');
+                document.querySelector('.feature').classList.add('show');
+            });
+        });
+    </script>
 </body>
 </html>
 

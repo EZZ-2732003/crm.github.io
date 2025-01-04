@@ -1,135 +1,134 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+
 {% block content %}
-  <div class="container">
+
+
+<div class="container mt-5">
     <h2>Create Payment</h2>
-
     <form method="post">
-      {% csrf_token %}
-      
-      <!-- Payment form fields -->
-      <fieldset class="border p-2 mb-4">
-        <legend class="w-auto px-2">Payment Details</legend>
-        {{ payment_form|crispy }}
-      </fieldset>
+        {% csrf_token %}
+        <div class="card mb-4">
+            <div class="card-header">Payment Details</div>
+            <div class="card-body">
+                <div class="form-payment">
+                {{ payment_form.as_p }}
+                </div>
+            </div>
+        </div>
 
-      <!-- Payment services formset -->
-      <fieldset class="border p-2 mb-4">
-        <legend class="w-auto px-2">Services</legend>
-        {{ payment_service_formset.management_form }}
-        <table class="table table-striped table-bordered">
-          <thead class="thead-dark">
-            <tr>
-              <th>Service</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              
-            </tr>
-          </thead>
-          <tbody id="services-list">
-            {% for form in payment_service_formset %}
-            <tr>
-              <td>{{ form.service|as_crispy_field }}</td>
-              <td>{{ form.quantity|as_crispy_field }}</td>
-              <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
-              
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <button type="button" class="btn btn-secondary" id="add-service">Add Another Service</button>
-      </fieldset>
-      
-      <!-- Payment products formset -->
-      <fieldset class="border p-2 mb-4">
-        <legend class="w-auto px-2">Products</legend>
-        {{ payment_inventory_formset.management_form }}
-        <table class="table table-striped table-bordered">
-          <thead class="thead-dark">
-            <tr>
-              <th>Product</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              
-            </tr>
-          </thead>
-          <tbody id="products-list">
-            {% for form in payment_inventory_formset %}
-            <tr>
-              <td>{{ form.inventory|as_crispy_field }}</td>
-              <td>{{ form.quantity|as_crispy_field }}</td>
-              <td>{{ form.price_at_time_of_payment|as_crispy_field }}</td>
-              
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <button type="button" class="btn btn-secondary" id="add-product">Add Another Product</button>
-      </fieldset>
+        <div class="card mb-4">
+            <div class="card-header">Services</div>
+            <div class="card-body">
+                {{ payment_service_formset.management_form }}
+                <div id="service-forms">
+                    {% for form in payment_service_formset %}
+                        <div class="row service-form">
+                            <div class="col-md-5">
+                                {{ form.service.label_tag }} {{ form.service }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.quantity.label_tag }} {{ form.quantity }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.price_at_time_of_payment.label_tag }} {{ form.price_at_time_of_payment }}
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger remove-service">X</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary mt-3" id="add-service">Add Service</button>
+            </div>
+        </div>
 
-      <!-- Total Section -->
-      
+        <div class="card mb-4">
+            <div class="card-header">Inventory</div>
+            <div class="card-body">
+                {{ payment_inventory_formset.management_form }}
+                <div id="inventory-forms">
+                    {% for form in payment_inventory_formset %}
+                        <div class="row inventory-form">
+                            <div class="col-md-5">
+                                {{ form.inventory.label_tag }} {{ form.inventory }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.quantity.label_tag }} {{ form.quantity }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.price_at_time_of_payment.label_tag }} {{ form.price_at_time_of_payment }}
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger remove-inventory">X</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary mt-3" id="add-inventory">Add Inventory</button>
+            </div>
+        </div>
 
-      <button type="submit" class="btn btn-primary">Submit Payment</button>
+        <button type="submit" class="btn btn-success">Create Payment</button>
     </form>
-  </div>
+</div>
 
-  <script>
-    // Helper function to update total amounts
-    function updateTotals() {
-      let totalServices = 0;
-      let totalProducts = 0;
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add service form dynamically
+        document.getElementById('add-service').addEventListener('click', function () {
+            const serviceForms = document.getElementById('service-forms');
+            const totalForms = document.querySelector('#id_services-TOTAL_FORMS');
+            const formIndex = totalForms.value;
 
-      document.querySelectorAll('.service-total').forEach(function (element) {
-        totalServices += parseFloat(element.textContent) || 0;
-      });
+            // Clone the last service form
+            const newForm = serviceForms.children[0].cloneNode(true);
+            newForm.querySelectorAll('input, select').forEach(function (input) {
+                const name = input.name.replace(`-${formIndex - 1}-`, `-${formIndex}-`);
+                const id = input.id.replace(`_${formIndex - 1}_`, `_${formIndex}_`);
+                input.name = name;
+                input.id = id;
+                input.value = '';
+            });
+            serviceForms.appendChild(newForm);
+            totalForms.value = parseInt(totalForms.value) + 1;
+        });
 
-      document.querySelectorAll('.product-total').forEach(function (element) {
-        totalProducts += parseFloat(element.textContent) || 0;
-      });
+        // Remove service form dynamically
+        document.getElementById('service-forms').addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-service')) {
+                e.target.closest('.service-form').remove();
+                const totalForms = document.querySelector('#id_services-TOTAL_FORMS');
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        });
 
-      const totalPayment = totalServices + totalProducts;
-      document.getElementById('total-payment').textContent = totalPayment.toFixed(2);
-    }
+        // Add inventory form dynamically
+        document.getElementById('add-inventory').addEventListener('click', function () {
+            const inventoryForms = document.getElementById('inventory-forms');
+            const totalForms = document.querySelector('#id_inventory-TOTAL_FORMS');
+            const formIndex = totalForms.value;
 
-    // Add new service row
-    document.getElementById('add-service').addEventListener('click', function () {
-      const formIdx = document.querySelectorAll('#id_services-TOTAL_FORMS')[0];
-      const formCount = parseInt(formIdx.value);
-      const newForm = document.querySelectorAll('#services-list tr')[0].cloneNode(true);
-      
-      newForm.querySelectorAll('input').forEach(function (input) {
-        input.name = input.name.replace(/\d+/, formCount);
-        input.value = '';
-      });
+            // Clone the last inventory form
+            const newForm = inventoryForms.children[0].cloneNode(true);
+            newForm.querySelectorAll('input, select').forEach(function (input) {
+                const name = input.name.replace(`-${formIndex - 1}-`, `-${formIndex}-`);
+                const id = input.id.replace(`_${formIndex - 1}_`, `_${formIndex}_`);
+                input.name = name;
+                input.id = id;
+                input.value = '';
+            });
+            inventoryForms.appendChild(newForm);
+            totalForms.value = parseInt(totalForms.value) + 1;
+        });
 
-      document.querySelector('#services-list').appendChild(newForm);
-      formIdx.value = formCount + 1;
-      updateTotals();  // Update totals after adding
+        // Remove inventory form dynamically
+        document.getElementById('inventory-forms').addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-inventory')) {
+                e.target.closest('.inventory-form').remove();
+                const totalForms = document.querySelector('#id_inventory-TOTAL_FORMS');
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        });
     });
-
-    // Add new product row
-    document.getElementById('add-product').addEventListener('click', function () {
-      const formIdx = document.querySelectorAll('#id_inventory-TOTAL_FORMS')[0];
-      const formCount = parseInt(formIdx.value);
-      const newForm = document.querySelectorAll('#products-list tr')[0].cloneNode(true);
-
-      newForm.querySelectorAll('input').forEach(function (input) {
-        input.name = input.name.replace(/\d+/, formCount);
-        input.value = '';
-      });
-
-      document.querySelector('#products-list').appendChild(newForm);
-      formIdx.value = formCount + 1;
-      updateTotals();  // Update totals after adding
-    });
-
-    // Event listener for quantity/price changes to update totals
-    document.addEventListener('input', function () {
-      updateTotals();
-    });
-
-    // Initial total calculation on page load
-    updateTotals();
-  </script>
+</script>
 {% endblock %}

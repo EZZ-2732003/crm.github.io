@@ -1,6 +1,7 @@
 from itertools import count
 import json
 import django.contrib.auth.forms
+from django.forms import modelformset_factory
 from django.shortcuts import render , redirect, get_object_or_404
 from.forms import * 
 from django.contrib.auth.forms import UserCreationForm
@@ -21,7 +22,13 @@ from datetime import datetime
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login
-
+from django.shortcuts import render
+from django.http import HttpResponse
+from datetime import datetime
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.db.models import Sum
+from .models import Reserve, Payment, PaymentInventory, PaymentService
 
 # Create your views here.
 def index (request):
@@ -410,39 +417,47 @@ def create_service(request):
  #Create Payment
 def create_payment(request):
     if request.method == 'POST':
+        # Initialize the forms with POST data
         payment_form = PaymentForm(request.POST)
         payment_service_formset = PaymentServiceFormSet(request.POST, prefix='services')
         payment_inventory_formset = PaymentInventoryFormSet(request.POST, prefix='inventory')
 
+        # Check if all forms are valid
         if payment_form.is_valid() and payment_service_formset.is_valid() and payment_inventory_formset.is_valid():
+            # Save the Payment instance
             payment = payment_form.save()
 
-            # حفظ الخدمات
+            # Process and save service entries if any
             for service_form in payment_service_formset:
-                service_instance = service_form.save(commit=False)
-                service_instance.payment = payment
-                
-                # استخدام cleaned_data للحصول على السعر
-                service_instance.price_at_time_of_payment = service_form.cleaned_data['price_at_time_of_payment']  # حفظ السعر
-                service_instance.save()
+                if service_form.cleaned_data:  # Check if the form is not empty
+                    service_instance = service_form.save(commit=False)
+                    service_instance.payment = payment  # Link the service to the payment
 
-            # حفظ المنتجات
+                    # Dynamically set the price if not provided
+                    if not service_instance.price_at_time_of_payment:
+                        service_instance.price_at_time_of_payment = service_instance.service.price
+
+                    service_instance.save()
+
+            # Process and save inventory entries if any
             for inventory_form in payment_inventory_formset:
-                inventory_instance = inventory_form.save(commit=False)
-                inventory_instance.payment = payment
-                
-                # استخدام cleaned_data للحصول على السعر
-                inventory_instance.price_at_time_of_payment = inventory_form.cleaned_data['price_at_time_of_payment']  # حفظ السعر
-                inventory_instance.save()
+                if inventory_form.cleaned_data:  # Check if the form is not empty
+                    inventory_instance = inventory_form.save(commit=False)
+                    inventory_instance.payment = payment  # Link the inventory to the payment
 
-            # حساب الإجمالي
-            # ...
+                    # Dynamically set the price if not provided
+                    if not inventory_instance.price_at_time_of_payment:
+                        inventory_instance.price_at_time_of_payment = inventory_instance.inventory.item_price
 
+                    inventory_instance.save()
+
+            # Redirect to a summary or success page
             return render(request, 'web/payment_summary.html', {
                 'payment': payment,
-                # ...
+                'total_amount': payment.get_total_amount(),
             })
     else:
+        # If the request is GET, initialize empty forms
         payment_form = PaymentForm()
         payment_service_formset = PaymentServiceFormSet(prefix='services')
         payment_inventory_formset = PaymentInventoryFormSet(prefix='inventory')
@@ -452,17 +467,24 @@ def create_payment(request):
         'payment_service_formset': payment_service_formset,
         'payment_inventory_formset': payment_inventory_formset,
     })
-    
+
+
 def payment_detail(request, payment_id):
+    # Retrieve the payment instance
     payment = get_object_or_404(Payment, id=payment_id)
+    
+    # Fetch related services and inventories
     services = payment.paymentservice_set.all()
     inventories = payment.paymentinventory_set.all()
-    
+
+   
+
     return render(request, 'web/view_bill.html', {
         'payment': payment,
         'services': services,
         'inventories': inventories,
-    })    
+        'offer': offer,  # Include offer details in the context
+    })
     
 def edit_payment(request, payment_id):
     payment = get_object_or_404(Payment, id=payment_id)
@@ -555,6 +577,17 @@ def inventory_view(request, item_id=None):
     else:
         inventory = Inventory.objects.all()
 
+    # حساب إجمالي تكلفة المخزون وإجمالي القيمة المتوقعة
+    totals = inventory.aggregate(
+    total_cost=Sum(F('item_quantity') * F('item_cost')),
+    total_value=Sum(F('item_quantity') * F('item_price'))
+)
+
+    total_cost = totals['total_cost'] or 0
+    total_value = totals['total_value'] or 0
+    expected_revenue = total_value - total_cost
+
+
     # التعديل: إذا كان هناك item_id موجود، جلب العنصر المطلوب تعديله
     if item_id:
         inventory_item = get_object_or_404(Inventory, id=item_id)
@@ -576,7 +609,14 @@ def inventory_view(request, item_id=None):
             form = InventoryForm()
 
     # تمرير قائمة المخزون، النموذج، وقيمة البحث إلى القالب
-    return render(request, 'web/inventory.html', {'inventory': inventory, 'form': form, 'query': query})
+    return render(request, 'web/inventory.html', {
+        'inventory': inventory,
+        'form': form,
+        'query': query,
+        'total_cost': total_cost,
+        'total_value': total_value,
+        'expected_revenue': expected_revenue,
+    })
 
 #edit inventory
 def update_inventory_item(request, item_id):
@@ -611,21 +651,58 @@ def delete_inventory_item(request, item_id):
 
 # List Payments
 def payment_list(request):
-    query = request.GET.get('q')  # قيمة البحث من البارامتر
-    branch_filter = request.GET.get('branch')  # الحصول على الفرع المطلوب من البارامتر
-    
-    # بدء البحث الأساسي
+    query = request.GET.get('q')  # Search value
+    branch_filter = request.GET.get('branch')  # Branch filter
+    start_date = request.GET.get('start_date')  # Start date filter
+    end_date = request.GET.get('end_date')  # End date filter
+
+    # Base query for payments
     payments = Payment.objects.all()
-    
-    # تصفية النتائج بناءً على اسم المريض إذا كان هناك بحث
+
+    # Filter payments by patient name if query exists
     if query:
         payments = payments.filter(Q(patient__icontains=query))
-    
-    # تصفية النتائج حسب الفرع إذا تم تحديده
+
+    # Filter payments by branch if branch_filter is valid
     if branch_filter and branch_filter in dict(Payment.BRANCH_CHOICES).keys():
         payments = payments.filter(Branch=branch_filter)
 
-    return render(request, 'web/billing.html', {'payments': payments, 'selected_branch': branch_filter})
+    # Filter payments by date range if start_date and end_date are provided
+    if start_date and end_date:
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            payments = payments.filter(created_at__range=[start_date, end_date])
+        except ValueError:
+            pass  # Ignore invalid date inputs
+
+    # Base query for financial transactions
+    finances = Finance.objects.all()
+
+    # Filter finances by date range if start_date and end_date are provided
+    if start_date and end_date:
+        try:
+            finances = finances.filter(created_at__range=[start_date, end_date])
+        except ValueError:
+            pass  # Ignore invalid date inputs
+
+    # Calculate financial summaries for the filtered transactions
+    total_income = finances.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = finances.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_refund = finances.filter(transaction_type='Refund').aggregate(Sum('amount'))['amount__sum'] or 0
+
+    context = {
+        'payments': payments,
+        'selected_branch': branch_filter,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_refund': total_refund,
+        'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+        'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
+    }
+
+    return render(request, 'web/billing.html', context)
+
 def update_payment_status(request, payment_id, new_status):
     # جلب الفاتورة المطلوبة بناءً على الـ ID الخاص بها
     payment = get_object_or_404(Payment, id=payment_id)
@@ -677,8 +754,40 @@ def edit_payment(request, payment_id):
 
 # List Invoices
 def invoice_list(request):
-    invoices = Invoice.objects.all()
-    return render(request, 'web/invoice_list.html', {'invoices': invoices})
+    # Get the start and end dates from GET parameters if available
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    export_pdf = request.GET.get('export_pdf')
+
+    # Filter invoices based on date range if provided
+    if start_date and end_date:
+        invoices = Invoice.objects.filter(created_at__range=[start_date, end_date])
+    else:
+        invoices = Invoice.objects.all()
+
+    # Calculate the total paid and total due for all invoices in the time frame
+    total_paid = invoices.aggregate(total_paid=Sum('total_paid'))['total_paid'] or 0
+    total_due = invoices.aggregate(total_due=Sum('remaining_amount'))['total_due'] or 0
+
+    # Prepare context
+    context = {
+        'invoices': invoices,
+        'total_paid': total_paid,
+        'total_due': total_due,
+    }
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/invoices_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
+    # Render the invoice list page
+    return render(request, 'web/invoice_list.html', context)
 
 
 # Create Invoice
@@ -701,6 +810,7 @@ def invoice_detail_view(request, id):
     """
     invoice = get_object_or_404(Invoice, id=id)
     total_due = invoice.total_cost - invoice.total_paid
+    export_pdf = request.GET.get('export_pdf')
 
     if request.method == 'POST':
         payment_amount = request.POST.get('payment_amount')
@@ -716,11 +826,22 @@ def invoice_detail_view(request, id):
             messages.error(request, str(e))
 
         return redirect('invoice_detail', id=id)
-
-    return render(request, 'web/invoice_detail.html', {
+    context = {
         'invoice': invoice,
         'total_due': total_due,
-    })
+    }
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/invoice_detail_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
+    return render(request, 'web/invoice_detail.html', context)
 
 
 def add_payment_view(request, id):
@@ -791,37 +912,50 @@ def edit_company(request, company_id):
     else:
         form = CompanyForm(instance=company)
     return render(request, 'web/edit_company.html', {'form': form})
-
 def company_detail(request, company_id):
     company = get_object_or_404(Companies, id=company_id)
     items = Inventory.objects.filter(company_source=company)
+    export_pdf = request.GET.get('export_pdf')
 
-    # Handle the time frame filter
+    # Handle time frame filtering
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    invoices = Invoice.objects.filter(company=company)
 
-    # Convert string dates to datetime objects
     if start_date and end_date:
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
-            invoices = Invoice.objects.filter(company=company, created_at__range=[start_date, end_date])
+            invoices = invoices.filter(created_at__range=[start_date, end_date])
         except ValueError:
-            invoices = Invoice.objects.filter(company=company)
-    else:
-        invoices = Invoice.objects.filter(company=company)
+            print("Invalid date format provided.")
 
-    # Calculate total due and total paid
+    # Calculate financials
     total_due = sum(invoice.total_cost - invoice.total_paid for invoice in invoices)
     total_paid = sum(invoice.total_paid for invoice in invoices)
 
-    return render(request, 'web/company_detail.html', {
+    context = {
         'company': company,
         'items': items,
         'invoices': invoices,
         'total_due': total_due,
         'total_paid': total_paid,
-    })
+    }
+
+    if export_pdf:  # Check for PDF export
+        template = get_template('web/company_detail_pdf.html')  # PDF-specific template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="company_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
+    return render(request, 'web/company_detail.html', context)
+
+
 
 
 def delete_company(request, company_id):
@@ -1021,6 +1155,7 @@ def ElMohandseen_branch(request):
     # جلب التاريخ الذي تم اختياره من المستخدم
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    export_pdf = request.GET.get('export_pdf')
 
     # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
     if start_date and end_date:
@@ -1070,37 +1205,54 @@ def ElMohandseen_branch(request):
         'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
         'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
+     # Check if the user wants to export a PDF
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/ElMohandseen_branch_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
 
     return render(request, 'web/ElMohandseen_branch.html', context)
 
 
 def fifeth_sattelmant_branch(request):
-    # جلب التاريخ الذي تم اختياره من المستخدم
+    # Fetch selected date range from the user
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    export_pdf = request.GET.get('export_pdf')
 
-    # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
+    # Convert strings to date objects
     if start_date and end_date:
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-            # جلب الحجوزات الخاصة بفرع الخامس ضمن النطاق الزمني المحدد
+            # Fetch reservations within the date range
             reservations = Reserve.objects.filter(Branch='5th_sattelment', date__range=[start_date, end_date])
 
-            # جلب الفواتير الخاصة بفرع الخامس ضمن النطاق الزمني المحدد
+            # Fetch invoices within the date range
             invoices = Payment.objects.filter(Branch='5th_sattelment', created_at__range=[start_date, end_date])
 
-            # حساب الكميات المستهلكة من المخزون لفرع الخامس ضمن النطاق الزمني المحدد
-            inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment', payment__created_at__range=[start_date, end_date]).values(
-                'inventory__item_name'
-            ).annotate(total_quantity_used=Sum('quantity'))
+            # Calculate inventory usage within the date range
+            inventory_usage = PaymentInventory.objects.filter(
+                payment__Branch='5th_sattelment',
+                payment__created_at__range=[start_date, end_date]
+            ).values('inventory__item_name').annotate(total_quantity_used=Sum('quantity'))
 
-            # حساب الكميات المستهلكة من الخدمات لفرع الخامس ضمن النطاق الزمني المحدد
-            service_usage = PaymentService.objects.filter(payment__Branch='5th_sattelment', payment__created_at__range=[start_date, end_date]).values(
-                'service__name'
-            ).annotate(total_quantity_used=Sum('quantity'))
+            # Calculate service usage within the date range
+            service_usage = PaymentService.objects.filter(
+                payment__Branch='5th_sattelment',
+                payment__created_at__range=[start_date, end_date]
+            ).values('service__name').annotate(total_quantity_used=Sum('quantity'))
+
         except ValueError:
+            # Handle invalid date input
             reservations = Reserve.objects.filter(Branch='5th_sattelment')
             invoices = Payment.objects.filter(Branch='5th_sattelment')
             inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment').values(
@@ -1110,6 +1262,7 @@ def fifeth_sattelmant_branch(request):
                 'service__name'
             ).annotate(total_quantity_used=Sum('quantity'))
     else:
+        # Default data if no date range is provided
         reservations = Reserve.objects.filter(Branch='5th_sattelment')
         invoices = Payment.objects.filter(Branch='5th_sattelment')
         inventory_usage = PaymentInventory.objects.filter(payment__Branch='5th_sattelment').values(
@@ -1119,6 +1272,7 @@ def fifeth_sattelmant_branch(request):
             'service__name'
         ).annotate(total_quantity_used=Sum('quantity'))
 
+    # Prepare context data
     context = {
         'reservations': reservations,
         'invoices': invoices,
@@ -1128,35 +1282,42 @@ def fifeth_sattelmant_branch(request):
         'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
 
+    # Check if the user wants to export a PDF
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/fifeth_sattelmant_branch_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
+    # Render the standard HTML template
     return render(request, 'web/fifeth_sattelmant_branch.html', context)
 
 
 
 
 
+
 def naser_city_branch(request):
-    # جلب التاريخ الذي تم اختياره من المستخدم
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    export_pdf = request.GET.get('export_pdf')
 
-    # تحويل السلاسل النصية إلى كائنات تاريخية (Date objects)
+    # Convert strings to date objects
     if start_date and end_date:
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-            # جلب الحجوزات الخاصة بفرع مدينة نصر ضمن النطاق الزمني المحدد
             reservations = Reserve.objects.filter(Branch='Naser_city', date__range=[start_date, end_date])
-
-            # جلب الفواتير الخاصة بفرع مدينة نصر ضمن النطاق الزمني المحدد
             invoices = Payment.objects.filter(Branch='Naser_city', created_at__range=[start_date, end_date])
-
-            # حساب الكميات المستهلكة من المخزون لفرع مدينة نصر ضمن النطاق الزمني المحدد
             inventory_usage = PaymentInventory.objects.filter(payment__Branch='Naser_city', payment__created_at__range=[start_date, end_date]).values(
                 'inventory__item_name'
             ).annotate(total_quantity_used=Sum('quantity'))
-
-            # حساب الكميات المستهلكة من الخدمات لفرع مدينة نصر ضمن النطاق الزمني المحدد
             service_usage = PaymentService.objects.filter(payment__Branch='Naser_city', payment__created_at__range=[start_date, end_date]).values(
                 'service__name'
             ).annotate(total_quantity_used=Sum('quantity'))
@@ -1187,6 +1348,17 @@ def naser_city_branch(request):
         'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
         'end_date': end_date.strftime('%Y-%m-%d') if end_date else ''
     }
+
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/naser_city_branch_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
 
     return render(request, 'web/naser_city_branch.html', context)
 
@@ -1231,28 +1403,88 @@ def tasks(request):
     }
     return render(request, 'web/tasks.html', context)
 
-
+from .forms import OfferForm, OfferServiceForm, OfferInventoryForm
 def offer(request):
-    offer = offers.objects.all()  # استخدام اسم النموذج الصحيح
+    offer = offers.objects.all()  # Get all existing offers
     if request.method == 'POST':
-        form = OffersForm(request.POST)
-        if form.is_valid():
-            form.save()
+        offer_form = OfferForm(request.POST)
+        offer_service_forms = [OfferServiceForm(request.POST, prefix=f'service_{i}') for i in range(len(Service.objects.all()))]  # Adjust as needed
+        offer_inventory_forms = [OfferInventoryForm(request.POST, prefix=f'inventory_{i}') for i in range(len(Inventory.objects.all()))]  # Adjust as needed
+
+        if offer_form.is_valid():
+            new_offer = offer_form.save()  # Save the offer first
+
+            # Process OfferService forms
+            for service_form in offer_service_forms:
+                if service_form.is_valid():
+                    service_instance = service_form.save(commit=False)
+                    service_instance.offer = new_offer
+                    service_instance.save()
+
+            # Process OfferInventory forms
+            for inventory_form in offer_inventory_forms:
+                if inventory_form.is_valid():
+                    inventory_instance = inventory_form.save(commit=False)
+                    inventory_instance.offer = new_offer
+                    inventory_instance.save()
+
             messages.success(request, "Offer added successfully!")
-            return redirect('offers_list')  # استبدل 'offers_list' باسم الصفحة التي تريد إعادة التوجيه إليها
+            return redirect('offers_list')  # Replace with the appropriate URL
+
         else:
             messages.error(request, "There was an error. Please try again.")
     else:
-        form = OffersForm()
+        offer_form = OfferForm()
+        offer_service_forms = [OfferServiceForm(prefix=f'service_{i}') for i in range(len(Service.objects.all()))]
+        offer_inventory_forms = [OfferInventoryForm(prefix=f'inventory_{i}') for i in range(len(Inventory.objects.all()))]
 
     context = {
         'offers': offer,
-        'form': form  # إضافة النموذج إلى السياق لعرضه في القالب
+        'offer_form': offer_form,
+        'offer_service_forms': offer_service_forms,
+        'offer_inventory_forms': offer_inventory_forms
     }
+    
     return render(request, 'web/offer.html', context)
 
-
+def create_offer(request):
+    """
+    View for creating a new offer with associated services and inventory items.
+    """
+    if request.method == "POST":
+        # Main offer form
+        offer_form = OfferForm(request.POST)
         
+        if offer_form.is_valid():
+            offer = offer_form.save(commit=False)  # Save the offer instance without committing
+            
+            # Services and Inventory Formsets
+            service_formset = OfferServiceFormSet(request.POST, instance=offer)
+            inventory_formset = OfferInventoryFormSet(request.POST, instance=offer)
+            
+            if service_formset.is_valid() and inventory_formset.is_valid():
+                offer.save()  # Save the main offer to the database
+                
+                # Save associated services and inventory items
+                service_formset.save()
+                inventory_formset.save()
+                
+                messages.success(request, "Offer created successfully!")
+                return redirect("offer_list")  # Redirect to an offer list or another appropriate page
+            else:
+                messages.error(request, "Please fix the errors in the services or inventory forms.")
+        else:
+            messages.error(request, "Please correct the errors in the main offer form.")
+    else:
+        offer_form = OfferForm()
+        service_formset = OfferServiceFormSet(instance=offers())
+        inventory_formset = OfferInventoryFormSet(instance=offers())
+
+    return render(request, "web/create_offer.html", {
+        "offer_form": offer_form,
+        "service_formset": service_formset,
+        "inventory_formset": inventory_formset,
+    })
 
 
 # View to delete an offer
@@ -1262,3 +1494,63 @@ def offer_delete(request, pk):
         offer.delete()
         return redirect('offers_list')  # استبدل 'offers_list' باسم العرض المناسب
     return render(request, 'offers/offer_confirm_delete.html', {'offer': offer})
+
+
+
+
+def finance_list(request):
+    finances = Finance.objects.all()
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    export_pdf = request.GET.get('export_pdf')
+
+    if start_date and end_date:
+        finances = finances.filter(
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+
+    total_income = finances.filter(transaction_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_expense = finances.filter(transaction_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
+    total_refund = finances.filter(transaction_type='Refund').aggregate(Sum('amount'))['amount__sum'] or 0
+    net_profit = total_income - total_expense - total_refund
+
+    context = {
+        'finances': finances,
+        'start_date': start_date,
+        'end_date': end_date,
+        'total_income': total_income,
+        'total_expense': total_expense,
+        'total_refund': total_refund,
+        'net_profit': net_profit,
+    }
+    if export_pdf:  # Check if PDF export is requested
+        template = get_template('web/finance_pdf.html')  # Create a separate PDF template
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="naser_city_report.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse('Error generating PDF', status=500)
+        return response
+
+
+    return render(request, 'web/finance_list.html', context)
+
+
+
+    # Add new finance transaction
+def add_finance(request):
+    if request.method == 'POST':
+        form = FinanceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('finance_list')
+    else:
+        form = FinanceForm()
+
+    return render(request, 'finance/add_finance.html', {'form': form})
+
+
+

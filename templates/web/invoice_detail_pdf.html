@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Detail PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            font-size: 16px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        ul li {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        table, th, td {
+            border: 1px solid #000;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 5px 10px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Invoice Detail</h1>
+        <p>For: {{ invoice.company.company_name }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Invoice Details</h2>
+        <p><strong>Item:</strong> {{ invoice.item.item_name }}</p>
+        <p><strong>Quantity Purchased:</strong> {{ invoice.quantity_purchased }}</p>
+        <p><strong>Total Cost:</strong> EGP{{ invoice.total_cost }}</p>
+        <p><strong>Total Paid:</strong> EGP{{ invoice.total_paid }}</p>
+        <p><strong>Total Due:</strong> EGP{{ total_due }}</p>
+        <p><strong>Payment Method:</strong> {{ invoice.payment_method }}</p>
+    </div>
+
+    {% if invoice.payment_method == 'Installments' %}
+    <div class="section">
+        <h2>Payment History</h2>
+        {% if invoice.payments %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Amount</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in invoice.payments %}
+                <tr>
+                    <td>EGP{{ payment.amount }}</td>
+                    <td>{{ payment.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No payments made yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Add New Payment</h2>
+        <form action="" method="post">
+            {% csrf_token %}
+            <p><label for="payment_amount">Payment Amount:</label></p>
+            <p><input type="number" name="payment_amount" id="payment_amount" step="0.01" required style="padding: 5px; width: 100%;"></p>
+            <button type="submit" class="btn btn-success">Submit Payment</button>
+        </form>
+    </div>
+    {% endif %}
+</body>
+</html>
+

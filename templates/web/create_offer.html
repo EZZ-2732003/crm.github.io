@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Create Offer{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Create New Offer</h2>
+
+    <form method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        <!-- Main Offer Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Offer Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="id_name">Offer Name</label>
+                    {{ offer_form.name }}
+                </div>
+                <div class="form-row">
+                    <div class="col">
+                        <label for="id_valid_from">Valid From</label>
+                        {{ offer_form.valid_from }}
+                    </div>
+                    <div class="col">
+                        <label for="id_valid_to">Valid To</label>
+                        {{ offer_form.valid_to }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Offer Services Formset -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Associated Services</h5>
+            </div>
+            <div class="card-body">
+                <div id="services-formset">
+                    {% for form in service_formset %}
+                    <div class="form-group">
+                        <label for="{{ form.instance.pk }}">Service</label>
+                        {{ form.service }}
+                        <label for="{{ form.instance.pk }}">Discount %</label>
+                        {{ form.discount_percentage }}
+                        <label for="{{ form.instance.pk }}">Discount Amount</label>
+                        {{ form.discount_amount }}
+                        <button type="button" class="btn btn-danger btn-sm remove-form" data-form="{{ form.instance.pk }}" aria-label="Remove Service">Remove</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-success" id="add-service-btn" aria-label="Add Service">Add Service</button>
+            </div>
+        </div>
+
+        <!-- Offer Inventory Formset -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Associated Inventory Items</h5>
+            </div>
+            <div class="card-body">
+                <div id="inventory-formset">
+                    {% for form in inventory_formset %}
+                    <div class="form-group">
+                        <label for="{{ form.instance.pk }}">Inventory Item</label>
+                        {{ form.inventory }}
+                        <label for="{{ form.instance.pk }}">Discount %</label>
+                        {{ form.discount_percentage }}
+                        <label for="{{ form.instance.pk }}">Discount Amount</label>
+                        {{ form.discount_amount }}
+                        <button type="button" class="btn btn-danger btn-sm remove-form" data-form="{{ form.instance.pk }}" aria-label="Remove Inventory Item">Remove</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-success" id="add-inventory-btn" aria-label="Add Inventory Item">Add Inventory Item</button>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Save Offer</button>
+    </form>
+</div>
+
+<!-- Include Flatpickr's CSS and JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Flatpickr on both date fields
+        flatpickr('#id_valid_from', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today'
+        });
+        flatpickr('#id_valid_to', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today'
+        });
+
+        // Function to handle dynamic addition of new services
+        let serviceFormCount = {{ service_formset.management_form.TOTAL_FORMS.value|default:0 }};
+        document.getElementById('add-service-btn').addEventListener('click', function() {
+            const serviceFormTemplate = `
+                <div class="form-group">
+                    <label for="id_service_${serviceFormCount}">Service</label>
+                    <input type="text" name="service_form-${serviceFormCount}-service" id="id_service_${serviceFormCount}" class="form-control" required>
+                    <label for="id_discount_percentage_${serviceFormCount}">Discount %</label>
+                    <input type="number" name="service_form-${serviceFormCount}-discount_percentage" id="id_discount_percentage_${serviceFormCount}" class="form-control" required>
+                    <label for="id_discount_amount_${serviceFormCount}">Discount Amount</label>
+                    <input type="number" name="service_form-${serviceFormCount}-discount_amount" id="id_discount_amount_${serviceFormCount}" class="form-control" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-form" data-form="service-${serviceFormCount}" aria-label="Remove Service">Remove</button>
+                </div>
+            `;
+            document.getElementById('services-formset').insertAdjacentHTML('beforeend', serviceFormTemplate);
+            serviceFormCount++;
+        });
+
+        // Function to handle dynamic addition of new inventory items
+        let inventoryFormCount = {{ inventory_formset.management_form.TOTAL_FORMS.value|default:0 }};
+        document.getElementById('add-inventory-btn').addEventListener('click', function() {
+            const inventoryFormTemplate = `
+                <div class="form-group">
+                    <label for="id_inventory_${inventoryFormCount}">Inventory Item</label>
+                    <input type="text" name="inventory_form-${inventoryFormCount}-inventory" id="id_inventory_${inventoryFormCount}" class="form-control" required>
+                    <label for="id_discount_percentage_${inventoryFormCount}">Discount %</label>
+                    <input type="number" name="inventory_form-${inventoryFormCount}-discount_percentage" id="id_discount_percentage_${inventoryFormCount}" class="form-control" required>
+                    <label for="id_discount_amount_${inventoryFormCount}">Discount Amount</label>
+                    <input type="number" name="inventory_form-${inventoryFormCount}-discount_amount" id="id_discount_amount_${inventoryFormCount}" class="form-control" required>
+                    <button type="button" class="btn btn-danger btn-sm remove-form" data-form="inventory-${inventoryFormCount}" aria-label="Remove Inventory Item">Remove</button>
+                </div>
+            `;
+            document.getElementById('inventory-formset').insertAdjacentHTML('beforeend', inventoryFormTemplate);
+            inventoryFormCount++;
+        });
+
+        // Handle form removal
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('remove-form')) {
+                var form = event.target.closest('.form-group');
+                form.remove();
+            }
+        });
+    });
+</script>
+
+<!-- Custom CSS -->
+<style>
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+    .form-row .col {
+        margin-bottom: 1rem;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        font-size: 1rem;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    .needs-validation .form-control:invalid {
+        border-color: #dc3545;
+    }
+    .needs-validation .form-control:valid {
+        border-color: #28a745;
+    }
+    .form-group .remove-form {
+        margin-top: 1rem;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+
+{% endblock %}

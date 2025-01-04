@@ -94,19 +94,21 @@
                 </tr>
             </thead>
             <tbody>
-                {% for activity in activities %}
-                <tr>
-                    <td data-label="User">{{ activity.user.username }}</td>
-                    <td data-label="Login Time">{{ activity.login_time|date:"Y-m-d H:i:s" }}</td>
-                    <td data-label="Logout Time">{{ activity.logout_time|date:"Y-m-d H:i:s" }}</td>
-                    <td data-label="Status">{{ activity.is_active|yesno:"Active,Inactive" }}</td>
-                    <td data-label="Date">{{ activity.date }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="no-activity">No user activities found.</td>
-                </tr>
-                {% endfor %}
+                {% if activities %}
+                    {% for activity in activities %}
+                    <tr>
+                        <td data-label="User">{{ activity.user.username }}</td>
+                        <td data-label="Login Time">{{ activity.login_time|date:"Y-m-d H:i:s" }}</td>
+                        <td data-label="Logout Time">{{ activity.logout_time|date:"Y-m-d H:i:s" }}</td>
+                        <td data-label="Status">{{ activity.is_active|yesno:"Active,Inactive" }}</td>
+                        <td data-label="Date">{{ activity.date }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="no-activity">No user activities found.</td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
