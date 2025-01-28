@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reservations</title>
+    <style>
+        body {
+            background: linear-gradient(120deg, #ffffff, #f9e1e7);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 10px; /* زوايا دائرية */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f9e1e7; /* لون مخصص */
+            color: #b88b4a; /* لون ذهبي */
+            border-radius: 10px 10px 0 0; /* زوايا دائرية فقط للأعلى */
+            padding: 15px 20px;
+        }
+
+        h1.h2 {
+            color: #343a40;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center; /* مركزية العنوان */
+        }
+
+        /* تصميم جديد للجدول */
+        table.table {
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        table thead th {
+            background-color: #343a40;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 10px;
+        }
+
+        table tbody tr {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        table tbody tr:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        table tbody td {
+            padding: 15px;
+            text-align: center;
+            color: #343a40;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        /* زر التأكيد والإلغاء */
+        .btn-primary,
+        .btn-danger,
+        .btn-success {
+            font-size: 0.9em;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568c3;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        /* الشارات */
+        .badge {
+            padding: 0.5em 0.7em;
+            font-size: 0.9em;
+            border-radius: 5px;
+        }
+
+        .badge-success {
+            background-color: #28a745;
+        }
+
+        .badge-warning {
+            background-color: #ffc107;
+        }
+
+        .badge-danger {
+            background-color: #dc3545;
+        }
+
+        /* تحسين عرض الجدول على الهاتف */
+        @media (max-width: 768px) {
+            table thead {
+                display: none;
+            }
+
+            table tbody tr {
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            table tbody td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+            table tbody td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: #b88b4a;
+            }
+        }
+    </style>
+</head>
+
+<div class="content">
+    <h1 class="h2">Today's Reservations</h1>
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Services</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in today_reservations %}
+                <tr>
+                    <td>{{ reservation.patient_name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.formatted_time }}</td>
+                    <td>{{ reservation.Branch }}</td>
+                    <td><a href="{% url 'view_reservation' reservation.pk %}" class="btn btn-sm btn-info">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h1 class="h2">Future Reservations</h1>
+    <div class="card">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Branch</th>
+                    <th>Services</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in future_reservations %}
+                <tr>
+                    <td>{{ reservation.patient_name }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.formatted_time }}</td>
+                    <td>{{ reservation.Branch }}</td>
+                    <td><a href="{% url 'view_reservation' reservation.pk %}" class="btn btn-sm btn-info">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+ {% endblock %}
+
+

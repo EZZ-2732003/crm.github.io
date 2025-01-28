@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        .summary {
+            margin-bottom: 20px;
+        }
+        .summary div {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Finance Report</h1>
+    <h2>{{ start_date }} to {{ end_date }}</h2>
+
+    <!-- Summary Section -->
+    <div class="summary">
+        <div><strong>Total Income:</strong> EGP{{ total_income }}</div>
+        <div><strong>Total Expense:</strong> EGP{{ total_expense }}</div>
+        <div><strong>Total Refund:</strong> EGP{{ total_refund }}</div>
+        <div><strong>Net Profit:</strong> EGP{{ net_profit }}</div>
+    </div>
+
+    <!-- Transactions Table -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Related Payment</th>
+                <th>Related Invoice</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for finance in finances %}
+            <tr>
+                <td>{{ finance.id }}</td>
+                <td>{{ finance.transaction_type }}</td>
+                <td>
+                    {% if finance.amount < 0 %}
+                    <span style="color: red;">{{ finance.amount }}EGP</span>
+                    {% else %}
+                    <span style="color: green;">{{ finance.amount }}EGP</span>
+                    {% endif %}
+                </td>
+                <td>{{ finance.description|default:"N/A" }}</td>
+                <td>
+                    {% if finance.related_payment %}
+                    Payment #{{ finance.related_payment.id }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>
+                    {% if finance.related_invoice %}
+                    Invoice #{{ finance.related_invoice.id }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </td>
+                <td>{{ finance.created_at|date:"Y-m-d" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center;">No transactions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

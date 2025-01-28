@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card payment-summary">
+        <h2 class="summary-header">Payment Summary</h2>
+
+        <div class="summary-section">
+            <h3>Payment ID: <span>{{ payment.id }}</span></h3>
+            <p>Date: {{ payment.created_at|date:"Y-m-d H:i" }}</p>
+        </div>
+
+        <!-- Combined Services and Products Table -->
+        <div class="details-section">
+            <h3>Services</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Service/Product</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Loop through services -->
+                    {% for service in payment.paymentservice_set.all %}
+                    <tr>
+                        <td>{{ service.service.name }}</td>
+                        <td>{{ service.quantity }}</td>
+                        <td>{{ service.price_at_time_of_payment|floatformat:2 }} EGP</td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Loop through products -->
+                    {% for inventory in payment.paymentinventory_set.all %}
+                    <tr>
+                        <td>{{ inventory.inventory.item_name }}</td>
+                        <td>{{ inventory.quantity }}</td>
+                        <td>{{ inventory.price_at_time_of_payment|floatformat:2 }} EGP</td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- If no services or products -->
+                    {% if not payment.paymentservice_set.all and not payment.paymentinventory_set.all %}
+                    <tr>
+                        <td colspan="3" class="text-center">No services or products found for this payment.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Section -->
+        <div class="totals">
+            <h2>Total Payment: <span class="total">{{ payment.get_total_amount|floatformat:2 }} EGP</span></h2>
+        </div>
+
+        <!-- Back to Payment List Button -->
+        <a href="{% url 'payment_list' %}" class="btn btn-primary">Back to Payment List</a>
+    </div>
+</div>
+{% endblock %}
+
+<style>
+  .payment-summary {
+      padding: 30px;
+      background: linear-gradient(135deg, #f9e1e7, #ffe5e9);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      margin: 20px 0;
+      font-family: 'Arial', sans-serif;
+  }
+
+  .summary-header {
+      font-size: 24px;
+      font-weight: bold;
+      color: #6a1b9a;
+      text-align: center;
+      margin-bottom: 20px;
+  }
+
+  .summary-section {
+      margin-bottom: 20px;
+  }
+
+  .details-section {
+      margin-bottom: 20px;
+  }
+
+  .table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      margin-bottom: 20px;
+  }
+
+  .table-striped tbody tr {
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-striped tbody tr:hover {
+      transform: scale(1.02);
+      transition: transform 0.2s;
+  }
+
+  .totals {
+      font-size: 18px;
+      margin-top: 20px;
+      text-align: right;
+  }
+
+  .total {
+      color: #388e3c;
+      font-weight: bold;
+  }
+
+  .btn-primary {
+      background-color: #6a1b9a;
+      border: none;
+      font-size: 16px;
+      padding: 10px 20px;
+  }
+
+  .btn-primary:hover {
+      background-color: #7e57c2;
+  }
+</style>

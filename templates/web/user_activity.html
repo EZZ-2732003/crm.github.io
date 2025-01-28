@@ -1,0 +1,117 @@
+{%extends 'base.html'%}
+{%block content%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Activity Log</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* الهوية البصرية الأساسية */
+        body {
+            background: linear-gradient(120deg, #ffffff, #f9e1e7); /* الخلفية المتدرجة */
+            font-family: 'Arial', sans-serif;
+        }
+
+        h2 {
+            color: #343a40; /* لون النص */
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .table {
+            background-color: white;
+            border-radius: 10px; /* زوايا دائرية */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* ظل لإضافة عمق */
+        }
+
+        .table thead th {
+            background-color: #f9e1e7; /* استخدام لون الخلفية */
+            color: #b88b4a; /* اللون الذهبي */
+            text-align: center;
+        }
+
+        .table tbody tr {
+            transition: transform 0.2s ease;
+        }
+
+        .table tbody tr:hover {
+            transform: scale(1.02);
+            background-color: #f8f9fa; /* لون خلفية عند التمرير */
+        }
+
+        .table tbody td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .no-activity {
+            text-align: center;
+            font-weight: bold;
+            color: #dc3545; /* لون تحذيري */
+        }
+
+        /* تحسين العرض على الهواتف */
+        @media (max-width: 768px) {
+            .table thead {
+                display: none; /* إخفاء الرأس على الشاشات الصغيرة */
+            }
+            .table tbody tr {
+                display: block;
+                margin-bottom: 10px; /* مسافة بين الصفوف */
+                box-shadow: none;
+                border-radius: 8px;
+                background-color: white; /* خلفية بيضاء للصفوف */
+            }
+            .table tbody td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #ddd; /* حدود أسفل */
+            }
+            .table tbody td::before {
+                content: attr(data-label); /* إضافة عناوين الصفوف */
+                font-weight: bold;
+                color: #667eea; /* لون عنوان الصف */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>User Activity Log</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Login Time</th>
+                    <th>Logout Time</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if activities %}
+                    {% for activity in activities %}
+                    <tr>
+                        <td data-label="User">{{ activity.user.username }}</td>
+                        <td data-label="Login Time">{{ activity.login_time|date:"Y-m-d H:i:s" }}</td>
+                        <td data-label="Logout Time">{{ activity.logout_time|date:"Y-m-d H:i:s" }}</td>
+                        <td data-label="Status">{{ activity.is_active|yesno:"Active,Inactive" }}</td>
+                        <td data-label="Date">{{ activity.date }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="no-activity">No user activities found.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+{%endblock%}

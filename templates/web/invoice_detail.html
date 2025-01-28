@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <span>Invoice Detail for {{ invoice.company.company_name }}</span>
+            
+        </div>
+        <div class="card-body">
+            <div class="content">
+                <!-- Invoice Details Section -->
+                <p><strong>Item:</strong> {{ invoice.item.item_name }}</p>
+                <p><strong>Quantity Purchased:</strong> {{ invoice.quantity_purchased }}</p>
+                <p><strong>Total Cost:</strong> EGP{{ invoice.total_cost }}</p>
+                <p><strong>Total Paid:</strong> EGP{{ invoice.total_paid }}</p>
+                <p><strong>Total Due:</strong> EGP{{ total_due }}</p>
+                <p><strong>Payment Method:</strong> {{ invoice.payment_method }}</p>
+                <a href="{% url 'invoice_list' %}" class="btn btn-primary">Back to Invoice List</a>
+                
+
+                {% if invoice.payment_method == 'Installments' %}
+                <!-- Payment History Section -->
+                <hr>
+                <h3>Payment History</h3>
+                {% if invoice.payments %}
+                    <ul>
+                        {% for payment in invoice.payments %}
+                            <li><strong>Amount:</strong> EGP{{ payment.amount }}, <strong>Date:</strong> {{ payment.date }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No payments made yet.</p>
+                {% endif %}
+
+                <!-- Add New Payment Section -->
+                <hr>
+                <h3>Add New Payment</h3>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="payment_amount">Payment Amount:</label>
+                        <input type="number" name="payment_amount" class="form-control" id="payment_amount" step="0.01" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Submit Payment</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

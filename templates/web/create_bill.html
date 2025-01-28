@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<div class="container mt-5">
+    <h2>Create Payment</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="card mb-4">
+            <div class="card-header">Payment Details</div>
+            <div class="card-body">
+                <div class="form-payment">
+                {{ payment_form.as_p }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Services</div>
+            <div class="card-body">
+                {{ payment_service_formset.management_form }}
+                <div id="service-forms">
+                    {% for form in payment_service_formset %}
+                        <div class="row service-form">
+                            <div class="col-md-5">
+                                {{ form.service.label_tag }} {{ form.service }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.quantity.label_tag }} {{ form.quantity }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.price_at_time_of_payment.label_tag }} {{ form.price_at_time_of_payment }}
+                                <span class="dynamic-price" data-service-id="{{ form.service.value }}"></span>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger remove-service">X</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary mt-3" id="add-service">Add Service</button>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">Services items</div>
+            <div class="card-body">
+                {{ payment_inventory_formset.management_form }}
+                <div id="inventory-forms">
+                    {% for form in payment_inventory_formset %}
+                        <div class="row inventory-form">
+                            <div class="col-md-5">
+                                {{ form.inventory.label_tag }} {{ form.inventory }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.quantity.label_tag }} {{ form.quantity }}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.price_at_time_of_payment.label_tag }} {{ form.price_at_time_of_payment }}
+                                <span class="dynamic-price" data-inventory-id="{{ form.inventory.value }}"></span>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-danger remove-inventory">X</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-primary mt-3" id="add-inventory">Add Inventory</button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Create Payment</button>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    // Initialize Flatpickr for the date field
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',  // Adjust the date format as needed
+        allowInput: true,     // Allow manual input
+        defaultDate: 'today', // Set the default date to today
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Add service form dynamically
+        document.getElementById('add-service').addEventListener('click', function () {
+            const serviceForms = document.getElementById('service-forms');
+            const totalForms = document.querySelector('#id_services-TOTAL_FORMS');
+            const formIndex = totalForms.value;
+
+            // Clone the last service form
+            const newForm = serviceForms.lastElementChild.cloneNode(true);
+            newForm.querySelectorAll('input, select').forEach(function (input) {
+                const name = input.name.replace(`-${formIndex - 1}-`, `-${formIndex}-`);
+                const id = input.id.replace(`_${formIndex - 1}_`, `_${formIndex}_`);
+                input.name = name;
+                input.id = id;
+                input.value = '';
+            });
+            serviceForms.appendChild(newForm);
+            totalForms.value = parseInt(totalForms.value) + 1;
+        });
+
+        // Remove service form dynamically
+        document.getElementById('service-forms').addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-service')) {
+                e.target.closest('.service-form').remove();
+                const totalForms = document.querySelector('#id_services-TOTAL_FORMS');
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        });
+
+        // Add inventory form dynamically
+        document.getElementById('add-inventory').addEventListener('click', function () {
+            const inventoryForms = document.getElementById('inventory-forms');
+            const totalForms = document.querySelector('#id_inventory-TOTAL_FORMS');
+            const formIndex = totalForms.value;
+
+            // Clone the last inventory form
+            const newForm = inventoryForms.lastElementChild.cloneNode(true);
+            newForm.querySelectorAll('input, select').forEach(function (input) {
+                const name = input.name.replace(`-${formIndex - 1}-`, `-${formIndex}-`);
+                const id = input.id.replace(`_${formIndex - 1}_`, `_${formIndex}_`);
+                input.name = name;
+                input.id = id;
+                input.value = '';
+            });
+            inventoryForms.appendChild(newForm);
+            totalForms.value = parseInt(totalForms.value) + 1;
+        });
+
+        // Remove inventory form dynamically
+        document.getElementById('inventory-forms').addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-inventory')) {
+                e.target.closest('.inventory-form').remove();
+                const totalForms = document.querySelector('#id_inventory-TOTAL_FORMS');
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        });
+
+        // وظيفة لتحميل الأسعار بناءً على الخدمة المختارة
+        function loadPrice(serviceId, priceElement) {
+            fetch(`/get-price/?service_id=${serviceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    priceElement.textContent = data.price;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // استمع إلى التغييرات في قوائم الخدمات المنسدلة
+        document.querySelectorAll('select[name$="-service"]').forEach(function (serviceSelect) {
+            serviceSelect.addEventListener('change', function () {
+                const serviceId = this.value;
+                const priceElement = this.closest('.service-form').querySelector('.dynamic-price');
+                loadPrice(serviceId, priceElement);
+            });
+        });
+
+        // استمع إلى التغييرات في قوائم المخزون المنسدلة
+        document.querySelectorAll('select[name$="-inventory"]').forEach(function (inventorySelect) {
+            inventorySelect.addEventListener('change', function () {
+                const inventoryId = this.value;
+                const priceElement = this.closest('.inventory-form').querySelector('.dynamic-price');
+                loadPrice(inventoryId, priceElement);
+            });
+        });
+    });
+</script>
+
+{% endblock %}

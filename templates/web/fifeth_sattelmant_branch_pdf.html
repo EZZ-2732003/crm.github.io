@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5th Settlement Branch Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .section-title {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>5th Settlement Branch Report</h1>
+
+    <p><strong>Report Period:</strong> {{ start_date }} to {{ end_date }}</p>
+
+    <!-- Reservations Section -->
+    <div>
+        <h2 class="section-title">Reservations</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Phone</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reservation in reservations %}
+                <tr>
+                    <td>{{ reservation.patient_name }}</td>
+                    <td>{{ reservation.phone }}</td>
+                    <td>{{ reservation.date }}</td>
+                    <td>{{ reservation.time }}</td>
+                    
+                    <td>{{ reservation.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Invoices Section -->
+    <div>
+        <h2 class="section-title">Invoices</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Invoice ID</th>
+                    <th>Patient Name</th>
+                    <th>Date</th>
+                    <th>Total Amount</th>
+                    <th>Status</th>
+                    <th>Payment Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>{{ invoice.id }}</td>
+                    <td>{{ invoice.patient }}</td>
+                    <td>{{ invoice.created_at }}</td>
+                    <td>{{ invoice.get_total_amount }}</td>
+                    <td>{{ invoice.status }}</td>
+                    <td>{{ invoice.method }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Inventory Usage Section -->
+    <div>
+        <h2 class="section-title">Inventory Usage</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Total Quantity Used</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory_usage %}
+                <tr>
+                    <td>{{ item.inventory__item_name }}</td>
+                    <td>{{ item.total_quantity_used }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Service Usage Section -->
+    <div>
+        <h2 class="section-title">Service Usage</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Service Name</th>
+                    <th>Total Quantity Used</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in service_usage %}
+                <tr>
+                    <td>{{ service.service__name }}</td>
+                    <td>{{ service.total_quantity_used }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        Generated on {{ "now"|date:"Y-m-d H:i:s" }}
+    </div>
+</body>
+
+</html>

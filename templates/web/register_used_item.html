@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Used Item - Noura Fouad Clinics CRM</title>
+    <!-- External CSS Libraries -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Custom Styles -->
+    <style>
+        body {
+            background: linear-gradient(120deg, #ffffff, #f9e1e7);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: #f9e1e7;
+            color: #b88b4a;
+            border-radius: 10px 10px 0 0;
+            padding: 15px 20px;
+        }
+
+        h1.h2 {
+            color: #343a40;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        table.table {
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        table thead th {
+            background-color: #343a40;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 10px;
+        }
+
+        table tbody tr {
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        table tbody tr:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        table tbody td {
+            padding: 15px;
+            text-align: center;
+            color: #343a40;
+            font-weight: 500;
+            vertical-align: middle;
+        }
+
+        .btn-primary,
+        .btn-danger {
+            font-size: 0.9em;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #5568c3;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .messages {
+            list-style: none;
+            padding: 0;
+        }
+
+        .messages li {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .messages .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .messages .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <main role="main" class="col-md-12 ml-sm-auto col-lg-12 px-4">
+                <!-- Page Header -->
+                <h1 class="h2">
+                    <i class="fas fa-box-open"></i> Register Used Item
+                </h1>
+
+                <!-- Display Messages -->
+                {% if messages %}
+                <ul class="messages">
+                    {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                <!-- Form to Register Used Items -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-edit"></i> Register Usage
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            {{ form|crispy }}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Register Usage
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Used Items History Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i> Used Items History
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-box"></i> Item Name</th>
+                                    <th><i class="fas fa-sort-numeric-down"></i> Quantity Used</th>
+                                    <th><i class="fas fa-calendar-day"></i> Date Used</th>
+                                    <th><i class="fas fa-sticky-note"></i> Notes</th>
+                                    <th><i class="fas fa-tools"></i> Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for used_item in used_items %}
+                                <tr>
+                                    <td>{{ used_item.inventory_item.item_name }}</td>
+                                    <td>{{ used_item.quantity_used }}</td>
+                                    <td>{{ used_item.date_used }}</td>
+                                    <td>{{ used_item.notes }}</td>
+                                    <td>
+                                       
+                                        <!-- Delete Button -->
+                                        <form method="POST" action="{% url 'delete_used_item' used_item.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this record?');">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- External JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noura Fouad Clinics CRM</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
+    <style>/* General Reset */
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(135deg, #fff6f1, #cd8e85); /* خلفية متدرجة بالألوان الوردية والذهبية */
+            color: #333; /* نص باللون الداكن */
+            font-family: 'Poppins', sans-serif; /* خط الموقع */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navbar */
+        .navbar {
+            margin-bottom: 30px;
+            background-color: #fbe4e8; /* لون خلفية فاتح للبار */
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff5f8;
+            z-index: 9999;
+        }
+
+        #welcome-screen #lottie-animation {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background-color: #fff5f8; /* خلفية بيضاء زهري */
+            padding: 50px 0;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease;
+        }
+        
+        .hero-section.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-section h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #8A6B55; /* لون داكن للأكسر */
+        }
+        
+        .hero-section a {
+            background-color: #ffd700; /* زر باللون الذهبي */
+            color: #8A6B55; /* نص باللون الداكن */
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 12px 24px;
+            transition: background-color 0.3s ease;
+            text-decoration: none; /* إزالة الخط أسفل النص */
+        }
+        
+        .hero-section a:hover {
+            background-color: #f9a602; /* لون أغمق عند التحويم */
+            color: #fff;
+        }
+        
+        /* Feature Section */
+        .feature {
+            background-color: #f9e1e7; /* خلفية بيضاء زهري فاتحة */
+            padding: 40px 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease 0.2s;
+        }
+
+        .feature.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .feature h3 {
+            color: #8A6B55; /* لون داكن للأكسر */
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .feature i {
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+        
+        .feature p {
+            color: #555; /* لون النص أغمق قليلاً */
+        }
+        
+        /* تحسين عرض الميزات على الهواتف */
+        @media (max-width: 768px) {
+            .feature .col-md-4 {
+                margin-bottom: 30px;
+                text-align: center;
+            }
+        
+            .hero-section h1 {
+                font-size: 2em; /* تصغير حجم العنوان للعرض المناسب على الهواتف */
+            }
+        
+            .hero-section a {
+                padding: 10px 18px; /* تقليل حجم الزر للعرض المناسب على الهواتف */
+            }
+        }
+        
+        /* Container */
+        .container {
+            flex: 1; /* المحتوى الرئيسي يحتل أكبر مساحة ممكنة */
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #fbe4e8; /* لون خلفية فاتح للفوتر */
+            color: #8A6B55; /* نص داكن */
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto; /* الفوتر دائمًا في الأسفل */
+        }
+        
+        .footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div id="lottie-animation"></div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Welcome to Noura Fouad Clinics System</h1>
+            <br><br>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="btn btn-lg mt-3">My Dashboard</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-lg mt-3">Get Started</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="feature">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-users"></i>
+                    <h3>Patient Management</h3>
+                    <p>Easily manage patient appointments, records, and history.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <h3>Billing & Invoicing</h3>
+                    <p>Automate billing processes and keep track of payments.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Secure Data Storage</h3>
+                    <p>All your data is securely stored and easily accessible.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Noura Fouad Clinics. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Initialize Lottie Animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const animation = lottie.loadAnimation({
+                container: document.getElementById('lottie-animation'), // The container element
+                renderer: 'svg',
+                loop: false, // Disable looping
+                autoplay: true,
+                path: '/static/Logo-4-[remix].json' // Replace with the correct path
+            });
+
+            // Hide the welcome screen when the animation is complete
+            animation.addEventListener('complete', () => {
+                document.getElementById('welcome-screen').style.display = 'none';
+                document.querySelector('.hero-section').classList.add('show');
+                document.querySelector('.feature').classList.add('show');
+            });
+        });
+    </script>
+</body>
+</html>
+
+{% endblock %}

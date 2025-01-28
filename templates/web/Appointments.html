@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments Management</title>
+    <style>
+        /* Add header styling from previous design */
+        table thead th {
+            background-color: #343a40;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 10px;
+        }
+
+        table thead th i {
+            margin-right: 8px;
+        }
+
+        .date-group {
+            margin-bottom: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .date-header {
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .date-header:hover {
+            background-color: #f1f3f5;
+        }
+        
+        .date-header h3 {
+            margin: 0;
+            color: #343a40;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .date-header .badge {
+            font-size: 0.9em;
+            padding: 7px 10px;
+        }
+        
+        .highlight-today .date-header {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .collapsed .date-header {
+            border-radius: 10px;
+        }
+        
+        .reservation-table {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        .btn i {
+            margin-right: 6px;
+        }
+        
+        .badge i {
+            margin-right: 4px;
+            font-size: 0.9em;
+        }
+        
+        .input-group-prepend .input-group-text {
+            background-color: #fff;
+            border-right: none;
+            padding-right: 0;
+        }
+        
+        input[name="q"] {
+            border-left: none;
+            padding-left: 10px;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .date-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .btn-sm {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <h1 class="h2 mb-4"><i class="fas fa-calendar-alt"></i> Appointments</h1>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h3 class="h5 mb-0"><i class="fas fa-list-ul"></i> Appointment List</h3>
+                <form method="GET" action="{% url 'Appointments' %}" class="mt-3">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                        </div>
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Search by name or phone" 
+                               value="{{ request.GET.q }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-filter"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div class="mt-3">
+                    <a href="{% url 'Schedule_Appointment' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Schedule New
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% now "Y-m-d" as today %}
+                {% regroup records by date as date_groups %}
+                
+                {% for date_group in date_groups %}
+                {% with date_group.grouper|date:"Y-m-d" as group_date %}
+                <div class="date-group {% if group_date == today %}highlight-today{% endif %}">
+                    <div class="date-header" data-toggle="collapse" data-target="#collapse{{ forloop.counter }}">
+                        <h3>
+                            <i class="fas fa-calendar-day text-primary"></i>
+                            {{ date_group.grouper|date:"F j, Y" }}
+                            <span class="badge badge-primary">
+                                <i class="fas fa-users"></i> {{ date_group.list|length }}
+                            </span>
+                        </h3>
+                        <i class="fas fa-chevron-down text-muted"></i>
+                    </div>
+                    
+                    <div id="collapse{{ forloop.counter }}" class="reservation-table collapse show">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-dark text-white">
+                                    <tr>
+                                        <th><i class="fas fa-user"></i> Patient</th>
+                                        <th><i class="fas fa-tag"></i> Type</th>
+                                        <th><i class="fas fa-phone-alt"></i> Contact</th>
+                                        <th><i class="fas fa-clock"></i> Time</th>
+                                        <th><i class="fas fa-map-marker-alt"></i> Location</th>
+                                        <th><i class="fas fa-info-circle"></i> Status</th>
+                                        <th><i class="fas fa-cogs"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in date_group.list %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-user-circle text-muted"></i>
+                                            {{ record.patient_name }}
+                                            {% if record.type == 'old' and record.patient_id %}
+                                                (ID: {{ record.patient_id }})
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if record.type == 'new' %}
+                                                <span class="badge badge-info">
+                                                    <i class="fas fa-star"></i> New
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">
+                                                    <i class="fas fa-redo"></i> Old
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-phone-alt text-muted"></i>
+                                            {{ record.phone }}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-clock text-muted"></i>
+                                            {{ record.formatted_time }}
+                                        </td>
+                                        <td>
+                                            <i class="fas fa-map-marker-alt text-danger"></i>
+                                            {{ record.Branch }}
+                                        </td>
+                                        <td>
+                                            {% if record.status == 'pending' %}
+                                                <span class="badge badge-warning">
+                                                    <i class="fas fa-clock"></i> Pending
+                                                </span>
+                                            {% elif record.status == 'completed' %}
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-check-circle"></i> Completed
+                                                </span>
+                                            {% elif record.status == 'cancelled' %}
+                                                <span class="badge badge-danger">
+                                                    <i class="fas fa-times-circle"></i> Cancelled
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'view_reservation' record.id %}" 
+                                                   class="btn btn-sm btn-info"
+                                                   data-toggle="tooltip" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'create_payment_with_patient' reserve_id=record.id %}" 
+                                                   class="btn btn-sm btn-success"
+                                                   data-toggle="tooltip" title="Process Payment">
+                                                    <i class="fas fa-file-invoice-dollar"></i>
+                                                </a>
+                                                {% if record.status == 'pending' %}
+                                                <a href="{% url 'update_appointment_status' record.id 'completed' %}" 
+                                                   class="btn btn-sm btn-success"
+                                                   data-toggle="tooltip" title="Confirm Appointment">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                                <a href="{% url 'update_appointment_status' record.id 'cancelled' %}" 
+                                                   class="btn btn-sm btn-danger"
+                                                   data-toggle="tooltip" title="Cancel Appointment">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts remain unchanged -->
+</body>
+
+</html>
+
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Appointment</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .selectable-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid #dee2e6;
+            margin: 2px;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .selectable-option.active {
+            border-color: #007bff !important;
+            background-color: #e9f5ff !important;
+            box-shadow: 0 2px 6px rgba(0,123,255,0.2);
+        }
+        .is-invalid .selectable-option {
+            border-color: #dc3545 !important;
+        }
+        .invalid-feedback {
+            display: block;
+            color: #dc3545;
+            margin-top: 0.5rem;
+        }
+        .service-card {
+            min-width: 150px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Schedule New Appointment</h1>
+        
+        <form method="POST" id="appointmentForm" novalidate>
+            {% csrf_token %}
+            
+            <!-- Patient Information -->
+            <div class="mb-3">
+                {{ form.patient_name|as_crispy_field }}
+            </div>
+            <div class="mb-3">
+                {{ form.phone|as_crispy_field }}
+            </div>
+
+            <!-- Appointment Type -->
+            <div class="mb-4 {% if form.type.errors %}is-invalid{% endif %}">
+                <h5>Appointment Type {% if form.type.errors %}<span class="text-danger">*</span>{% endif %}</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for value, label in form.type.field.choices %}
+                    <div class="selectable-option type-card" data-value="{{ value }}">
+                        {{ label }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="id_type" name="type" value="{{ form.type.value|default:'' }}">
+                {% for error in form.type.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Date & Time -->
+            <div class="mb-3">
+                {{ form.date|as_crispy_field }}
+            </div>
+            <div class="mb-3">
+                {{ form.time|as_crispy_field }}
+            </div>
+
+            <!-- Branch Selection -->
+            <div class="mb-4 {% if form.Branch.errors %}is-invalid{% endif %}">
+                <h5>Branch {% if form.Branch.errors %}<span class="text-danger">*</span>{% endif %}</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for value, label in form.Branch.field.choices %}
+                    <div class="selectable-option branch-card" data-value="{{ value }}">
+                        {{ label }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="id_Branch" name="Branch" value="{{ form.Branch.value|default:'' }}">
+                {% for error in form.Branch.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Services Selection -->
+            <div class="mb-4 {% if form.services.errors %}is-invalid{% endif %}">
+                <h5>Services {% if form.services.errors %}<span class="text-danger">*</span>{% endif %}</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% comment %} Display service choices from model {% endcomment %}
+                    {% for value, label in SERVICE_CHOICES %}
+                    <div class="selectable-option service-card" data-value="{{ value }}">
+                        {{ label }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="id_services" name="services" 
+                  value="{{ form.services.value|default:'' }}">
+                {% for error in form.services.errors %}
+                <div class="invalid-feedback">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-3">
+                {{ form.notes|as_crispy_field }}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Schedule</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Flatpickr
+            flatpickr('#id_date', { 
+                dateFormat: 'Y-m-d', 
+                
+                defaultDate: "{{ form.date.value|date:'Y-m-d' }}"
+            });
+            
+            flatpickr('#id_time', { 
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: 'h:i K',
+                time_24hr: false,
+                defaultTime: "{{ form.time.value|default:'09:00 AM' }}"
+            });
+
+            // Selection System
+            function handleCardClick(event) {
+                const card = event.target.closest('.selectable-option');
+                if (!card) return;
+
+                const isService = card.classList.contains('service-card');
+                const isBranch = card.classList.contains('branch-card');
+                const isType = card.classList.contains('type-card');
+
+                if (isService) {
+                    card.classList.toggle('active');
+                    updateServices();
+                    return;
+                }
+
+                if (isBranch) {
+                    document.querySelectorAll('.branch-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    document.getElementById('id_Branch').value = card.dataset.value;
+                }
+                else if (isType) {
+                    document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    document.getElementById('id_type').value = card.dataset.value;
+                }
+            }
+
+            // Update Services Field
+            function updateServices() {
+                const services = Array.from(document.querySelectorAll('.service-card.active'))
+                                    .map(card => card.dataset.value);
+                document.getElementById('id_services').value = JSON.stringify(services);
+            }
+
+            // Initialize Existing Values
+            function initializeSelections() {
+                // Type
+                const initialType = "{{ form.type.value|default:'' }}";
+                if (initialType) {
+                    document.querySelector(`.type-card[data-value="${initialType}"]`)?.classList.add('active');
+                }
+
+                // Branch
+                const initialBranch = "{{ form.Branch.value|default:'' }}";
+                if (initialBranch) {
+                    document.querySelector(`.branch-card[data-value="${initialBranch}"]`)?.classList.add('active');
+                }
+
+                // Services
+                try {
+                    const initialServices = JSON.parse("{{ form.services.value|default:'[]'|escapejs }}");
+                    initialServices.forEach(value => {
+                        document.querySelector(`.service-card[data-value="${value}"]`)?.classList.add('active');
+                    });
+                } catch (e) {
+                    console.error('Error parsing initial services:', e);
+                }
+                updateServices();
+            }
+
+            // Form Submission Handler
+            document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+                let isValid = true;
+                
+                // Validate Type
+                if (!document.getElementById('id_type').value) {
+                    document.querySelector('.type-card').closest('.mb-4').classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                // Validate Branch
+                if (!document.getElementById('id_Branch').value) {
+                    document.querySelector('.branch-card').closest('.mb-4').classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                // Validate Services
+                const servicesValue = document.getElementById('id_services').value;
+                try {
+                    const services = JSON.parse(servicesValue);
+                    if (!Array.isArray(services) || services.length === 0) {
+                        throw new Error('No services selected');
+                    }
+                } catch (error) {
+                    document.querySelector('.service-card').closest('.mb-4').classList.add('is-invalid');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    window.scrollTo({
+                        top: document.querySelector('.is-invalid').offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+
+            // Event Listeners
+            document.body.addEventListener('click', handleCardClick);
+            initializeSelections();
+        });
+    </script>
+</body>
+</html>
+{% endblock %}
