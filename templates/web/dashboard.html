@@ -1,320 +1,278 @@
 {% extends 'base.html' %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noura Fouad Clinics CRM - Dashboard</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css">
-
-    <style>
-        /* General Reset */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        /* Background */
-        body {
-            background: linear-gradient(135deg, #fff6f1, #cd8e85);
-            color: #333;
-        }
-
-        /* General Settings */
-        .container {
-            padding: 20px;
-        }
-
-        h1 {
-            color: #8A6B55;
-            font-weight: bold;
-            margin-bottom: 30px;
-            text-align: center;
-            position: relative;
-            animation: fadeIn 1s ease-in-out;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2),
-                         0 0 10px rgba(255, 255, 255, 0.6);
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .row {
-            margin-bottom: 20px;
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        a:hover,
-        a:focus {
-            outline: none;
-            text-decoration: none;
-        }
-
-        /* Box Settings */
-        .icon-box {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 40px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .icon-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 20px;
-            border: 4px solid transparent;
-            animation: luminous 1.5s linear infinite;
-            z-index: 0;
-        }
-
-        .icon-box:hover::before {
-            border-color: rgba(255, 255, 255, 1);
-            animation: luminous 1.5s linear infinite;
-        }
-
-        @keyframes luminous {
-            0% {
-                clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);
-            }
-            25% {
-                clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
-            }
-            50% {
-                clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
-            }
-            75% {
-                clip-path: polygon(0% 100%, 100% 100%, 100% 100%, 0% 100%);
-            }
-            100% {
-                clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);
-            }
-        }
-
-        .icon-box i {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            color: #A99286;
-            transition: color 0.3s ease;
-            z-index: 1;
-        }
-
-        .icon-box:hover i {
-            color: #8A6B55;
-        }
-
-        .icon-box h5 {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #8A6B55;
-            z-index: 1;
-        }
-
-        /* Box Backgrounds */
-        .box-patients,
-        .box-billing,
-        .box-companies,
-        .box-statistics,
-        .box-staff {
-            background: #f9e1e7;
-        }
-
-        .box-appointments,
-        .box-invoice,
-        .box-inventory,
-        .box-branches {
-            background: #fbe4e8;
-        }
-
-        .icon-box:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #8A6B55;
-        }
-
-        footer a {
-            color: #8A6B55;
-        }
-
-        @media (max-width: 768px) {
-            .icon-box {
-                padding: 20px;
-            }
-        
-            .icon-box i {
-                font-size: 2rem;
-            }
-        
-            .icon-box h5 {
-                font-size: 1rem;
-            }
-        
-            .row {
-                margin-bottom: 15px;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .icon-box {
-                padding: 15px;
-            }
-        
-            .icon-box i {
-                font-size: 1.8rem;
-            }
-        
-            .icon-box h5 {
-                font-size: 0.9rem;
-            }
-        
-            .row {
-                gap: 10px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <h1 class="text-center">Welcome to the Dashboard, <b>{{ user }}</b></h1>
-
-        <!-- First Row -->
-        <div class="row mt-4">
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'patients' %}">
-                    <div class="icon-box box-patients">
-                        <i class="fas fa-user-injured"></i>
-                        <h5>Patients</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'Appointments' %}">
-                    <div class="icon-box box-appointments">
-                        <i class="fas fa-calendar-check"></i>
-                        <h5>Appointments</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'payment_list' %}">
-                    <div class="icon-box box-billing">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <h5>Billing</h5>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Second Row -->
-        <div class="row mt-4">
-            <div class="col-md-3 col-sm-6">
-                <a href="{%url 'invoice_list' %}">
-                    <div class="icon-box box-invoice">
-                        <i class="fas fa-file-invoice"></i>
-                        <h5>Invoice</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <a href="{% url 'companies' %}">
-                    <div class="icon-box box-companies">
-                        <i class="fas fa-building"></i>
-                        <h5>Companies</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <a href="{% url 'inventory' %}">
-                    <div class="icon-box box-inventory">
-                        <i class="fas fa-boxes"></i>
-                        <h5>Inventory</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <a href="{%url 'statistics'%}">
-                    <div class="icon-box box-statistics">
-                        <i class="fas fa-chart-line"></i>
-                        <h5>Statistics</h5>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <!-- Third Row -->
-        <div class="row mt-4">
-            <div class="col-md-4 col-sm-6">
-                <a href="{%url 'user_activity'%}">
-                    <div class="icon-box box-staff">
-                        <i class="fas fa-user-md"></i>
-                        <h5>Staff</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'branches' %}">
-                    <div class="icon-box box-branches">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <h5>Branches</h5>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <a href="{% url 'finance_list' %}">
-                    <div class="icon-box box-branches">
-                        <i class="fas fa-university"></i>
-                        <h5>Transactions</h5>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <footer>
-            <p>&copy; 2024 Noura Fouad Clinics CRM</p>
-        </footer>
+<div class="container-fluid my-3">
+  <div class="row">
+    <!-- الشريط الجانبي للتنقل بين الأقسام -->
+    <div class="col-md-2 mb-3">
+      <ul class="nav flex-column nav-pills" id="dashboardTabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" id="analytics-tab" data-toggle="pill" href="#analytics" role="tab" aria-controls="analytics" aria-selected="true">
+            <i class="fas fa-chart-line"></i> Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="appointments-tab" data-toggle="pill" href="#appointments" role="tab" aria-controls="appointments" aria-selected="false">
+            <i class="fas fa-calendar-check"></i> Appointments
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="patients-tab" data-toggle="pill" href="#patients" role="tab" aria-controls="patients" aria-selected="false">
+            <i class="fas fa-user"></i> Patients
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="billing-tab" data-toggle="pill" href="#billing" role="tab" aria-controls="billing" aria-selected="false">
+            <i class="fas fa-file-invoice-dollar"></i> Billing
+          </a>
+        </li>
+      </ul>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
-</body>
-</html>
+    <!-- المحتوى الرئيسي -->
+    <div class="col-md-10">
+      <div class="tab-content" id="dashboardContent">
+        <!-- قسم Analytics -->
+        <div class="tab-pane fade show active" id="analytics" role="tabpanel" aria-labelledby="analytics-tab">
+          <h2 class="mb-3"><i class="fas fa-chart-line"></i> Analytics</h2>
+          <div class="card mb-4">
+            <div class="card-body">
+              <div>   {% include 'web/analytics_partial.html' %}</div> 
+            </div>
+          </div>
+          <!-- يمكنك إضافة رسوم بيانية أخرى هنا -->
+        </div>
+
+        <!-- قسم Appointments -->
+        <div class="tab-pane fade" id="appointments" role="tabpanel" aria-labelledby="appointments-tab">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-calendar-check"></i> Appointments</h2>
+            
+          </div>
+         
+          <div id="appointmentsTableContainer">
+            <!-- placeholder بديل لقالب جدول الحجوزات -->
+            <div id="appointmentsTableContainer">
+                {% include 'web/appointments_partial.html' %}
+              </div>
+              
+          </div>
+        </div>
+
+        <!-- قسم Patients -->
+        <div class="tab-pane fade" id="patients" role="tabpanel" aria-labelledby="patients-tab">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-user"></i> Patients</h2>
+            
+          </div>
+          
+          <div id="patientsTableContainer">
+            <!-- placeholder بديل لقالب جدول المرضى -->
+            <div class="alert alert-secondary">
+              {% include 'web/patients_partial.html' %}
+            </div>
+          </div>
+        </div>
+
+        <!-- قسم Billing -->
+        <div class="tab-pane fade" id="billing" role="tabpanel" aria-labelledby="billing-tab">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="fas fa-file-invoice-dollar"></i> Billing</h2>
+          </div>
+          
+          <div id="billingTableContainer">
+            <!-- placeholder بديل لقالب جدول الفواتير -->
+            <div class="alert alert-secondary">
+              {% include 'web/payments_partial.html' %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Appointment -->
+<div class="modal fade" id="addAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addAppointmentForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addAppointmentModalLabel">Add Appointment</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- الحقول الخاصة بالحجز -->
+          <div class="form-group">
+            <label for="appointmentPatientName">Patient Name</label>
+            <input type="text" class="form-control" id="appointmentPatientName" name="patient_name" required>
+          </div>
+          <div class="form-group">
+            <label for="appointmentDate">Date</label>
+            <input type="date" class="form-control" id="appointmentDate" name="date" required>
+          </div>
+          <div class="form-group">
+            <label for="appointmentTime">Time</label>
+            <input type="time" class="form-control" id="appointmentTime" name="time" required>
+          </div>
+          <!-- يمكن إضافة المزيد من الحقول حسب الحاجة -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Add Appointment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Patient -->
+<div class="modal fade" id="addPatientModal" tabindex="-1" role="dialog" aria-labelledby="addPatientModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form id="addPatientForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addPatientModalLabel">Add Patient</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- الحقول الخاصة بالمريض -->
+          <div class="form-group">
+            <label for="patientName">Name</label>
+            <input type="text" class="form-control" id="patientName" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="patientDOB">Date of Birth</label>
+            <input type="date" class="form-control" id="patientDOB" name="date_of_birth" required>
+          </div>
+          <div class="form-group">
+            <label for="patientPhone">Phone</label>
+            <input type="text" class="form-control" id="patientPhone" name="phone" required>
+          </div>
+          <!-- يمكن إضافة المزيد من الحقول حسب الحاجة -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Add Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- تضمين مكتبة Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function(){
+  // إعداد رسم بياني للحجوزات
+  var ctx = document.getElementById('appointmentsChart').getContext('2d');
+  var appointmentsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [], // ستملأ بالبيانات القادمة من الخادم
+      datasets: [{
+        label: 'Appointments',
+        data: [],
+        backgroundColor: 'rgba(138,107,85,0.2)',
+        borderColor: 'rgba(138,107,85,1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+
+  // دالة لجلب بيانات الرسم البياني بشكل ديناميكي
+  function loadChartData(){
+    $.ajax({
+      url: "{% url 'get_chart_data' %}",
+      method: "GET",
+      dataType: "json",
+      success: function(response){
+        appointmentsChart.data.labels = response.labels;
+        appointmentsChart.data.datasets[0].data = response.data;
+        appointmentsChart.update();
+      }
+    });
+  }
+  loadChartData();
+
+  // بحث وتحديث جدول الحجوزات عبر AJAX
+  $("#appointmentsSearch").on("keyup", function(){
+    var query = $(this).val();
+    $.ajax({
+      url: "{% url 'appointments' %}",
+      data: { q: query },
+      success: function(data){
+        $("#appointmentsTableContainer").html(data);
+      }
+    });
+  });
+
+  // بحث وتحديث جدول المرضى عبر AJAX
+  $("#patientsSearch").on("keyup", function(){
+    var query = $(this).val();
+    $.ajax({
+      url: "{% url 'patients' %}",
+      data: { q: query },
+      success: function(data){
+        $("#patientsTableContainer").html(data);
+      }
+    });
+  });
+
+  // بحث وتحديث جدول الفواتير عبر AJAX
+  $("#billingSearch").on("keyup", function(){
+    var query = $(this).val();
+    $.ajax({
+      url: "{% url 'payment_list' %}",
+      data: { q: query },
+      success: function(data){
+        $("#billingTableContainer").html(data);
+      }
+    });
+  });
+
+  // إرسال فورم إضافة حجز عبر AJAX
+  $("#addAppointmentForm").on("submit", function(e){
+    e.preventDefault();
+    $.ajax({
+      url: "{% url 'add_appointment' %}",
+      method: "POST",
+      data: $(this).serialize(),
+      success: function(response){
+        $("#addAppointmentModal").modal('hide');
+        $("#appointmentsSearch").trigger("keyup");
+      },
+      error: function(){
+        alert("Error adding appointment");
+      }
+    });
+  });
+
+  // إرسال فورم إضافة مريض عبر AJAX
+  $("#addPatientForm").on("submit", function(e){
+    e.preventDefault();
+    $.ajax({
+      url: "{% url 'add_patient' %}",
+      method: "POST",
+      data: $(this).serialize(),
+      success: function(response){
+        $("#addPatientModal").modal('hide');
+        $("#patientsSearch").trigger("keyup");
+      },
+      error: function(){
+        alert("Error adding patient");
+      }
+    });
+  });
+});
+</script>
 {% endblock %}

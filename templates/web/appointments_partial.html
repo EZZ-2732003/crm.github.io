@@ -1,0 +1,160 @@
+<!-- appointments_partial.html -->
+<div class="card shadow-sm" id="appointmentsTableContainer">
+    <div class="card-header bg-white">
+      <h3 class="h5 mb-0">
+        <i class="fas fa-list-ul"></i> Appointment List
+      </h3>
+      <!-- نموذج البحث مع ID وتعديل action ليرجع الـ partial فقط -->
+      <form id="appointmentsSearchForm" method="GET" action="{% url 'appointments_partial' %}" class="mt-3">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text bg-white">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+          </div>
+          <input type="text" name="q" class="form-control" placeholder="Search by name or phone" value="{{ request.GET.q }}">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+      </form>
+      <div class="mt-3">
+        <a href="{% url 'Schedule_Appointment' %}" class="btn btn-primary">
+          <i class="fas fa-calendar-plus"></i> Schedule New
+        </a>
+      </div>
+    </div>
+    
+    <div class="card-body">
+      {% now "Y-m-d" as today %}
+      {% regroup appointments by date as date_groups %}
+      
+      {% for date_group in date_groups %}
+        {% with date_group.grouper|date:"Y-m-d" as group_date %}
+          <div class="date-group {% if group_date == today %}highlight-today{% endif %}">
+            <div class="date-header" data-toggle="collapse" data-target="#collapse{{ forloop.counter }}">
+              <h3>
+                <i class="fas fa-calendar-day text-primary"></i>
+                {{ date_group.grouper|date:"F j, Y" }}
+                <span class="badge badge-primary">
+                  <i class="fas fa-users"></i> {{ date_group.list|length }}
+                </span>
+              </h3>
+              <i class="fas fa-chevron-down text-muted"></i>
+            </div>
+            
+            <div id="collapse{{ forloop.counter }}" class="reservation-table collapse show">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="bg-dark text-white">
+                    <tr>
+                      <th><i class="fas fa-user"></i> Patient</th>
+                      <th><i class="fas fa-tag"></i> Type</th>
+                      <th><i class="fas fa-phone-alt"></i> Contact</th>
+                      <th><i class="fas fa-clock"></i> Time</th>
+                      <th><i class="fas fa-map-marker-alt"></i> Location</th>
+                      <th><i class="fas fa-info-circle"></i> Status</th>
+                      <th><i class="fas fa-cogs"></i> Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for appointment in date_group.list %}
+                      <tr>
+                        <td>
+                          <i class="fas fa-user-circle text-muted"></i>
+                          {{ appointment.patient_name }}
+                          {% if appointment.type == 'old' and appointment.patient_id %}
+                            (ID: {{ appointment.patient_id }})
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if appointment.type == 'new' %}
+                            <span class="badge badge-info">
+                              <i class="fas fa-star"></i> New
+                            </span>
+                          {% else %}
+                            <span class="badge badge-secondary">
+                              <i class="fas fa-redo"></i> Old
+                            </span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <i class="fas fa-phone-alt text-muted"></i>
+                          {{ appointment.phone }}
+                        </td>
+                        <td>
+                          <i class="fas fa-clock text-muted"></i>
+                          {{ appointment.formatted_time }}
+                        </td>
+                        <td>
+                          <i class="fas fa-map-marker-alt text-danger"></i>
+                          {{ appointment.Branch }}
+                        </td>
+                        <td>
+                          {% if appointment.status == 'pending' %}
+                            <span class="badge badge-warning">
+                              <i class="fas fa-clock"></i> Pending
+                            </span>
+                          {% elif appointment.status == 'completed' %}
+                            <span class="badge badge-success">
+                              <i class="fas fa-check-circle"></i> Completed
+                            </span>
+                          {% elif appointment.status == 'cancelled' %}
+                            <span class="badge badge-danger">
+                              <i class="fas fa-times-circle"></i> Cancelled
+                            </span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          <div class="d-flex gap-2">
+                            <a href="{% url 'view_reservation' appointment.id %}" class="btn btn-sm btn-info" data-toggle="tooltip" title="View Details">
+                              <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'create_payment_with_patient' reserve_id=appointment.id %}" class="btn btn-sm btn-success" data-toggle="tooltip" title="Process Payment">
+                              <i class="fas fa-file-invoice-dollar"></i>
+                            </a>
+                            {% if appointment.status == 'pending' %}
+                              <a href="{% url 'update_appointment_status_dashboard' appointment.id 'completed' %}" class="btn btn-sm btn-success" data-toggle="tooltip" title="Confirm Appointment">
+                                <i class="fas fa-check"></i>
+                              </a>
+                              <a href="{% url 'update_appointment_status_dashboard' appointment.id 'cancelled' %}" class="btn btn-sm btn-danger" data-toggle="tooltip" title="Cancel Appointment">
+                                <i class="fas fa-times"></i>
+                              </a>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </div>
+  
+  <!-- تأكد من تحميل jQuery قبل الكود التالي -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // استخدام event delegation لضمان استمرار الـ binding بعد تحديث المحتوى
+    $(document).on("submit", "#appointmentsSearchForm", function(e) {
+        e.preventDefault();
+        var query = $(this).find("input[name='q']").val();
+        $.ajax({
+            url: "{% url 'appointments_partial' %}",
+            method: "GET",
+            data: { q: query },
+            success: function(data){
+                $("#appointmentsTableContainer").html(data);
+            },
+            error: function(){
+                alert("Error fetching appointments data.");
+            }
+        });
+    });
+  </script>
+  

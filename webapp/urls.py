@@ -10,6 +10,11 @@ urlpatterns = [
     path('patients', views.patients,name='patients'),
     path('Appointments',views.Appointments,name='Appointments'),
     path('reservation/<int:pk>/', views.view_reservation, name='view_reservation'),
+    path('appointments-partial/', views.simple_appointments_partial, name='appointments_partial'),
+    path('patients/partial/', views.simple_patients_partial, name='patients_partial'),
+    path('payments/partial/', views.simple_payments_partial, name='payments_partial'),
+    path('analytics', views.analytics, name='analytics'),
+    
     
    
     path('view_patient/<int:record_id>/', views.view_patient , name='view_patient') ,
@@ -17,6 +22,7 @@ urlpatterns = [
     path('Schedule_Appointment', views.Schedule_Appointment,name='Schedule_Appointment'),
     path('schedule_appointment/<int:patient_id>/', views.Schedule_Appointment, name='Schedule_Appointment_with_patient'),
     path('Appointments/<int:appointment_id>/<str:status>/', views.update_appointment_status, name='update_appointment_status'),
+    path('Appointments/<int:appointment_id>/<str:status>/', views.update_appointment_status_dashboard, name='update_appointment_status_dashboard'),
     path('reservation/edit/<int:pk>/', views.edit_reservation, name='edit_reservation'),
     path('patients/delete/<int:patient_id>/', views.delete_patient, name='delete_patient'),
     path('patients/<int:record_id>/edit/', views.edit_patient, name='edit_patient'),

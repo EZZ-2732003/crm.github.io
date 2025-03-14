@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .chart-container {
+       width: 100%;
+       max-width: 800px;
+       margin: 20px auto;
+    }
+    .summary-card {
+       display: inline-block;
+       width: 30%;
+       margin: 10px;
+       padding: 20px;
+       border: 1px solid #ddd;
+       border-radius: 8px;
+       text-align: center;
+       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+       background: #f9f9f9;
+    }
+    .summary-card h2 {
+      margin: 0 0 10px;
+      font-size: 2em;
+      color: #333;
+    }
+    .summary-card p {
+      margin: 0;
+      font-size: 1em;
+      color: #777;
+    }
+    form { margin-bottom: 20px; text-align: center; }
+    select { padding: 5px 10px; font-size: 1em; }
+    table { width: 100%; margin-bottom: 20px; }
+    th, td { padding: 8px; text-align: center; }
+    th { background: #343a40; color: #fff; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Analytics - {{ time_frame|capfirst }} Report</h1>
+  
+  <!-- نموذج اختيار الإطار الزمني -->
+  <form id="timeFrameForm" method="GET" action="#">
+    <label for="time_frame">Select Time Frame:</label>
+    <select name="time_frame" id="time_frame" onchange="this.form.submit()">
+      <option value="day" {% if time_frame == 'day' %}selected{% endif %}>Day</option>
+      <option value="week" {% if time_frame == 'week' %}selected{% endif %}>Week</option>
+      <option value="month" {% if time_frame == 'month' %}selected{% endif %}>Month</option>
+      <option value="year" {% if time_frame == 'year' %}selected{% endif %}>Year</option>
+    </select>
+  </form>
+  
+  <!-- Summary Cards لبيانات اليوم -->
+  <div style="text-align:center;">
+    <div class="summary-card">
+      <h2>{{ total_appointments_today }}</h2>
+      <p>Appointments Today</p>
+    </div>
+    <div class="summary-card">
+      <h2>{{ total_revenue_today }}</h2>
+      <p>Total Revenue Today</p>
+    </div>
+    <div class="summary-card">
+      <h2>{{ total_patients_today }}</h2>
+      <p>Patients Added Today</p>
+    </div>
+  </div>
+  
+  <!-- جداول لآخر أسبوع (Recent Data) -->
+  <h2 style="text-align:center;">Recent Data (Last 7 Days)</h2>
+  
+  <h3>Recent Appointments</h3>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Patient</th>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for appointment in recent_appointments %}
+      <tr>
+        <td>{{ appointment.id }}</td>
+        <td>{{ appointment.patient_name }}</td>
+        <td>{{ appointment.date }}</td>
+        <td>{{ appointment.status }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No recent appointments.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <h3>Recent Payments</h3>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Patient</th>
+        <th>Date</th>
+        <th>Method</th>
+        <th>Total Amount</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in recent_payments %}
+      <tr>
+        <td>{{ payment.id }}</td>
+        <td>{{ payment.patient }}</td>
+        <td>{{ payment.date }}</td>
+        <td>{{ payment.method }}</td>
+        <td>{{ payment.get_total_amount }}</td>
+        <td>{{ payment.status }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6">No recent payments.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <h3>Recent New Patients</h3>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Created At</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pat in recent_patients %}
+      <tr>
+        <td>{{ pat.id }}</td>
+        <td>{{ pat.name }}</td>
+        <td>{{ pat.created_at|date:"Y-m-d" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="3">No recent patients.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  
+  <!-- بناء مصفوفات جافاسكريبت باستخدام حلقات Django للرسوم البيانية -->
+  <script>
+    var appointmentsLabels = [
+      {% for item in appointments_by_time %}
+        "{{ item.period|date:'d M Y' }}"{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+    var appointmentsCounts = [
+      {% for item in appointments_by_time %}
+        {{ item.count }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+    
+    var paymentsLabels = [
+      {% for item in payments_by_time %}
+        "{{ item.period|date:'d M Y' }}"{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+    var paymentsCounts = [
+      {% for item in payments_by_time %}
+        {{ item.count }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+    
+    var patientsLabels = [
+      {% for item in patients_by_time %}
+        "{{ item.period|date:'d M Y' }}"{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+    var patientsCounts = [
+      {% for item in patients_by_time %}
+        {{ item.count }}{% if not forloop.last %}, {% endif %}
+      {% endfor %}
+    ];
+  </script>
+  
+  <!-- عرض الرسوم البيانية باستخدام Chart.js -->
+  <div class="chart-container">
+    <canvas id="appointmentsChart"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="paymentsChart"></canvas>
+  </div>
+  
+  <div class="chart-container">
+    <canvas id="patientsChart"></canvas>
+  </div>
+  
+  <script>
+    // رسم بياني للحجوزات (Line Chart)
+    var ctx1 = document.getElementById('appointmentsChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: appointmentsLabels,
+        datasets: [{
+          label: 'Appointments',
+          data: appointmentsCounts,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Appointments Over Time'
+          }
+        }
+      }
+    });
+    
+    // رسم بياني للمدفوعات (Bar Chart)
+    var ctx2 = document.getElementById('paymentsChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: paymentsLabels,
+        datasets: [{
+          label: 'Payments',
+          data: paymentsCounts,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Payments Over Time'
+          }
+        }
+      }
+    });
+    
+    // رسم بياني للمرضى (Line Chart)
+    var ctx3 = document.getElementById('patientsChart').getContext('2d');
+    new Chart(ctx3, {
+      type: 'line',
+      data: {
+        labels: patientsLabels,
+        datasets: [{
+          label: 'Patients',
+          data: patientsCounts,
+          backgroundColor: 'rgba(255, 206, 86, 0.2)',
+          borderColor: 'rgba(255, 206, 86, 1)',
+          borderWidth: 1,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Patients Over Time'
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

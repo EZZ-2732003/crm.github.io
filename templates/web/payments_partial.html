@@ -1,0 +1,79 @@
+<div class="card shadow-sm" id="paymentsTableContainer">
+    <div class="card-header bg-white">
+      <h3 class="h5 mb-0">
+        <i class="fas fa-file-invoice-dollar"></i> Payments
+      </h3>
+      <!-- نموذج بحث اختياري للفواتير -->
+      <form id="paymentsSearchForm" method="GET" action="{% url 'payments_partial' %}" class="mt-3">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text bg-white">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+          </div>
+          <input type="text" name="q" class="form-control" placeholder="Search payments" value="{{ request.GET.q }}">
+          <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="bg-dark text-white">
+            <tr>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Method</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+            <tr>
+              <td>{{ payment.patient }}</td>
+              <td>{{ payment.date }}</td>
+              <td>{{ payment.method }}</td>
+              <td>{{ payment.get_total_amount }}</td>
+              <td>{{ payment.status }}</td>
+              <td>
+                <a href="{% url 'view_payment' payment.id %}" class="btn btn-sm btn-info">View</a>
+                <a href="{% url 'edit_payment' payment.id %}" class="btn btn-sm btn-warning">Edit</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6" class="text-center">No payments found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- (اختياري) دعم البحث الديناميكي باستخدام AJAX للفواتير -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).on("submit", "#paymentsSearchForm", function(e) {
+        e.preventDefault();
+        var query = $(this).find("input[name='q']").val();
+        $.ajax({
+            url: "{% url 'payments_partial' %}",
+            method: "GET",
+            data: { q: query },
+            success: function(data) {
+                $("#paymentsTableContainer").html(data);
+            },
+            error: function() {
+                alert("Error fetching payments data.");
+            }
+        });
+    });
+  </script>
+  

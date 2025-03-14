@@ -1340,15 +1340,6 @@
         "documentation": {}
     },
     {
-        "label": "django.contrib.auth.forms",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "django.contrib.auth.forms",
-        "description": "django.contrib.auth.forms",
-        "detail": "django.contrib.auth.forms",
-        "documentation": {}
-    },
-    {
         "label": "UserCreationForm",
         "importPath": "django.contrib.auth.forms",
         "description": "django.contrib.auth.forms",
@@ -1437,14 +1428,6 @@
         "documentation": {}
     },
     {
-        "label": "modelformset_factory",
-        "importPath": "django.forms",
-        "description": "django.forms",
-        "isExtraImport": true,
-        "detail": "django.forms",
-        "documentation": {}
-    },
-    {
         "label": "ValidationError",
         "importPath": "django.core.exceptions",
         "description": "django.core.exceptions",
@@ -1510,22 +1493,6 @@
     },
     {
         "label": "date",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "date",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -1653,14 +1620,6 @@
         "documentation": {}
     },
     {
-        "label": "Max",
-        "importPath": "django.db.models",
-        "description": "django.db.models",
-        "isExtraImport": true,
-        "detail": "django.db.models",
-        "documentation": {}
-    },
-    {
         "label": "Prefetch",
         "importPath": "django.db.models",
         "description": "django.db.models",
@@ -1677,7 +1636,7 @@
         "documentation": {}
     },
     {
-        "label": "Q",
+        "label": "Count",
         "importPath": "django.db.models",
         "description": "django.db.models",
         "isExtraImport": true,
@@ -1685,7 +1644,7 @@
         "documentation": {}
     },
     {
-        "label": "Prefetch",
+        "label": "Q",
         "importPath": "django.db.models",
         "description": "django.db.models",
         "isExtraImport": true,
@@ -1698,14 +1657,6 @@
         "description": "django.test",
         "isExtraImport": true,
         "detail": "django.test",
-        "documentation": {}
-    },
-    {
-        "label": "count",
-        "importPath": "itertools",
-        "description": "itertools",
-        "isExtraImport": true,
-        "detail": "itertools",
         "documentation": {}
     },
     {
@@ -1821,30 +1772,6 @@
         "documentation": {}
     },
     {
-        "label": "serialize",
-        "importPath": "django.core.serializers",
-        "description": "django.core.serializers",
-        "isExtraImport": true,
-        "detail": "django.core.serializers",
-        "documentation": {}
-    },
-    {
-        "label": "parse_date",
-        "importPath": "django.utils.dateparse",
-        "description": "django.utils.dateparse",
-        "isExtraImport": true,
-        "detail": "django.utils.dateparse",
-        "documentation": {}
-    },
-    {
-        "label": "parse_time",
-        "importPath": "django.utils.dateparse",
-        "description": "django.utils.dateparse",
-        "isExtraImport": true,
-        "detail": "django.utils.dateparse",
-        "documentation": {}
-    },
-    {
         "label": "get_template",
         "importPath": "django.template.loader",
         "description": "django.template.loader",
@@ -1858,6 +1785,38 @@
         "description": "xhtml2pdf",
         "isExtraImport": true,
         "detail": "xhtml2pdf",
+        "documentation": {}
+    },
+    {
+        "label": "TruncDay",
+        "importPath": "django.db.models.functions",
+        "description": "django.db.models.functions",
+        "isExtraImport": true,
+        "detail": "django.db.models.functions",
+        "documentation": {}
+    },
+    {
+        "label": "TruncMonth",
+        "importPath": "django.db.models.functions",
+        "description": "django.db.models.functions",
+        "isExtraImport": true,
+        "detail": "django.db.models.functions",
+        "documentation": {}
+    },
+    {
+        "label": "TruncWeek",
+        "importPath": "django.db.models.functions",
+        "description": "django.db.models.functions",
+        "isExtraImport": true,
+        "detail": "django.db.models.functions",
+        "documentation": {}
+    },
+    {
+        "label": "TruncYear",
+        "importPath": "django.db.models.functions",
+        "description": "django.db.models.functions",
+        "isExtraImport": true,
+        "detail": "django.db.models.functions",
         "documentation": {}
     },
     {
@@ -3323,7 +3282,7 @@
         "kind": 5,
         "importPath": "webapp.urls",
         "description": "webapp.urls",
-        "peekOfCode": "urlpatterns = [\n    path('', views.index,name='home'),\n    path('register/', views.register, name='register'),\n    path('my-login', views.my_Login,name='login'),\n    path ('dashboard', views.dashboard, name='dashboard'),\n    path('logout/', views.my_Logout, name='logout'),\n    path('patients', views.patients,name='patients'),\n    path('Appointments',views.Appointments,name='Appointments'),\n    path('reservation/<int:pk>/', views.view_reservation, name='view_reservation'),\n    path('view_patient/<int:record_id>/', views.view_patient , name='view_patient') ,",
+        "peekOfCode": "urlpatterns = [\n    path('', views.index,name='home'),\n    path('register/', views.register, name='register'),\n    path('my-login', views.my_Login,name='login'),\n    path ('dashboard', views.dashboard, name='dashboard'),\n    path('logout/', views.my_Logout, name='logout'),\n    path('patients', views.patients,name='patients'),\n    path('Appointments',views.Appointments,name='Appointments'),\n    path('reservation/<int:pk>/', views.view_reservation, name='view_reservation'),\n    path('appointments-partial/', views.simple_appointments_partial, name='appointments_partial'),",
         "detail": "webapp.urls",
         "documentation": {}
     },
@@ -3355,11 +3314,74 @@
         "documentation": {}
     },
     {
+        "label": "get_appointments_data",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def get_appointments_data(query=None):\n    \"\"\"تعالج بيانات الحجوزات وترجع context مناسب لعرضها مع دعم البحث الديناميكي.\"\"\"\n    today = date.today()\n    today_reservations = Reserve.objects.filter(date=today)\n    if query:\n        records = Reserve.objects.filter(\n            Q(patient_name__icontains=query) |\n            Q(phone__icontains=query)\n        ).prefetch_related(\n            Prefetch('reservation_services', queryset=ReservationService.objects.select_related('service'))",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "get_patients_data",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def get_patients_data(query=None):\n    \"\"\"تعالج بيانات المرضى وترجع قائمة مناسبة للعرض.\"\"\"\n    if query:\n        records = patient.objects.filter(\n            Q(name__icontains=query) |\n            Q(phone__icontains=query)\n        )\n    else:\n        records = patient.objects.all()\n    return {'records': records}",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "simple_patients_partial",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def simple_patients_partial(request):\n    query = request.GET.get('q')\n    context = get_patients_data(query)\n    return render(request, 'web/patients_partial.html', context)\ndef get_payments_data(query=None):\n    \"\"\"\n    تعالج بيانات Payment وترجع قائمة مناسبة للعرض.\n    إذا تم تمرير قيمة بحث (query)، يتم تصفية الفواتير بناءً على اسم المريض أو طريقة الدفع أو الحالة.\n    \"\"\"\n    if query:",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "get_payments_data",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def get_payments_data(query=None):\n    \"\"\"\n    تعالج بيانات Payment وترجع قائمة مناسبة للعرض.\n    إذا تم تمرير قيمة بحث (query)، يتم تصفية الفواتير بناءً على اسم المريض أو طريقة الدفع أو الحالة.\n    \"\"\"\n    if query:\n        payments = Payment.objects.filter(\n            Q(patient__icontains=query) |\n            Q(method__icontains=query) |\n            Q(status__icontains=query)",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "simple_payments_partial",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def simple_payments_partial(request):\n    query = request.GET.get('q', '')\n    context = get_payments_data(query=query)\n    return render(request, 'web/payments_partial.html', context)    \ndef get_analytics_data(request):\n    # استخراج الإطار الزمني المطلوب (افتراضي 'day')\n    time_frame = request.GET.get('time_frame', 'day').lower()\n    # بيانات اليوم\n    today = date.today()\n    recent_period = today - timedelta(days=14)  # آخر  أيام",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "get_analytics_data",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def get_analytics_data(request):\n    # استخراج الإطار الزمني المطلوب (افتراضي 'day')\n    time_frame = request.GET.get('time_frame', 'day').lower()\n    # بيانات اليوم\n    today = date.today()\n    recent_period = today - timedelta(days=14)  # آخر  أيام\n    todays_appointments = Reserve.objects.filter(date=today)\n    todays_payments = Payment.objects.filter(date=today)\n    todays_patients = patient.objects.filter(created_at__date=today)\n    total_appointments_today = todays_appointments.count()",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "analytics",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def analytics(request):\n    context = get_analytics_data(request)\n    return render(request, 'web/analytics_partial.html', context)\n@login_required(login_url='login')\ndef dashboard(request):\n    query = request.GET.get('q', '')\n    appointments_data = get_appointments_data(query=query)\n    # بالنسبة للمرضى، لا نمرر أي قيمة بحث حتى تظهر كل البيانات\n    patients_data = get_patients_data(query = query)\n    payments_data = get_payments_data(query=query)",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
         "label": "dashboard",
         "kind": 2,
         "importPath": "webapp.views",
         "description": "webapp.views",
-        "peekOfCode": "def dashboard(request):\n    total_patients = patient.objects.count()\n    today = timezone.now().date()\n    appointments_today = Reserve.objects.filter(date=today).count()\n    recent_appointments = Reserve.objects.order_by('-date', '-time')[:5]\n    context= {\n        'total_patients': total_patients,\n        'appointments_today': appointments_today,\n        'recent_appointments': recent_appointments\n    }",
+        "peekOfCode": "def dashboard(request):\n    query = request.GET.get('q', '')\n    appointments_data = get_appointments_data(query=query)\n    # بالنسبة للمرضى، لا نمرر أي قيمة بحث حتى تظهر كل البيانات\n    patients_data = get_patients_data(query = query)\n    payments_data = get_payments_data(query=query)\n    analytics_data = get_analytics_data(request)\n    context = {\n        'appointments': appointments_data['records'],\n        'today_reservations': appointments_data['today_reservations'],",
         "detail": "webapp.views",
         "documentation": {}
     },
@@ -3418,6 +3440,15 @@
         "documentation": {}
     },
     {
+        "label": "simple_appointments_partial",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def simple_appointments_partial(request):\n    # جلب كل سجلات الحجوزات\n    appointments = Reserve.objects.all()\n    # تمرير السجلات إلى قالب الـ partial (appointments_partial.html)\n    return render(request, 'web/appointments_partial.html', {'appointments': appointments})\ndef view_reservation(request, pk):\n    \"\"\"عرض تفاصيل الحجز\"\"\"\n    reservation = get_object_or_404(Reserve, pk=pk)\n    # معالجة الوقت وعرضه بتنسيق 12 ساعة\n    if isinstance(reservation.time, str):  # إذا كان الوقت مخزن كـ CharField",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
         "label": "view_reservation",
         "kind": 2,
         "importPath": "webapp.views",
@@ -3450,6 +3481,15 @@
         "importPath": "webapp.views",
         "description": "webapp.views",
         "peekOfCode": "def update_appointment_status(request, appointment_id, status):\n    record = get_object_or_404(Reserve, id=appointment_id)\n    record.status = status\n    record.save()\n    # إذا كانت الحالة 'completed' وكان المريض غير موجود في قاعدة بيانات المرضى\n    if status == 'completed' and not patient.objects.filter(name=record.patient_name).exists():\n        patient.objects.create(\n            name=record.patient_name,\n            phone=record.phone,\n            address='Default Address',  # يمكنك تحديث هذا إذا كان لديك عنوان محدد",
+        "detail": "webapp.views",
+        "documentation": {}
+    },
+    {
+        "label": "update_appointment_status_dashboard",
+        "kind": 2,
+        "importPath": "webapp.views",
+        "description": "webapp.views",
+        "peekOfCode": "def update_appointment_status_dashboard(request, appointment_id, status):\n    record = get_object_or_404(Reserve, id=appointment_id)\n    record.status = status\n    record.save()\n    # إذا كانت الحالة 'completed' وكان المريض غير موجود في قاعدة بيانات المرضى\n    if status == 'completed' and not patient.objects.filter(name=record.patient_name).exists():\n        patient.objects.create(\n            name=record.patient_name,\n            phone=record.phone,\n            address='Default Address',  # يمكنك تحديث هذا إذا كان لديك عنوان محدد",
         "detail": "webapp.views",
         "documentation": {}
     },

@@ -1,7 +1,4 @@
-from itertools import count
 import json
-import django.contrib.auth.forms
-from django.forms import modelformset_factory
 from django.shortcuts import render , redirect, get_object_or_404
 from.forms import * 
 from django.contrib.auth.forms import UserCreationForm
@@ -13,9 +10,7 @@ from django.urls import reverse
 from django.db.models import Q 
 from django.http import JsonResponse
 from django.contrib import messages 
-from django.db.models import Sum, F, Count, Max
-from django.core.serializers import serialize
-from django.utils.dateparse import parse_date, parse_time
+from django.db.models import Sum, F, Count
 from decimal import Decimal
 from django.db.models import Prefetch
 from datetime import datetime
@@ -30,6 +25,8 @@ from xhtml2pdf import pisa
 from django.db.models import Sum
 from .models import Reserve, Payment, PaymentInventory, PaymentService
 from datetime import date
+from django.db.models.functions import TruncDay, TruncMonth, TruncWeek, TruncYear
+from django.db.models import Count, Q
 
 # Create your views here.
 def index (request):
@@ -73,20 +70,194 @@ def my_Login(request):
     context = {'form': form}
     return render(request, 'web/login.html', context)
 
+def get_appointments_data(query=None):
+    """تعالج بيانات الحجوزات وترجع context مناسب لعرضها مع دعم البحث الديناميكي."""
+
+    today = date.today()
+    today_reservations = Reserve.objects.filter(date=today)
+
+    if query:
+        records = Reserve.objects.filter(
+            Q(patient_name__icontains=query) |
+            Q(phone__icontains=query)
+        ).prefetch_related(
+            Prefetch('reservation_services', queryset=ReservationService.objects.select_related('service'))
+        )
+    else:
+        records = Reserve.objects.prefetch_related(
+            Prefetch('reservation_services', queryset=ReservationService.objects.select_related('service'))
+        ).all()
+
+
+
+    # الحصول على أسماء المرضى للحجوزات القديمة
+    patient_names = {record.patient_name for record in records if record.type == 'old'}
+
+    # جلب المرضى وإنشاء قاموس من الاسم إلى الـ ID
+    patients = patient.objects.filter(name__in=patient_names)
+    patient_dict = {p.name: p.id for p in patients}
+
+    # معالجة الوقت وإعداد باقي البيانات لكل سجل
+    for record in records:
+        if isinstance(record.time, str):
+            try:
+                record.time = record.time.split(':')[0] + ':' + record.time.split(':')[1]
+                time_obj = datetime.strptime(record.time, '%H:%M').time()
+                record.formatted_time = time_obj.strftime('%I:%M %p')
+            except ValueError:
+                record.formatted_time = record.time
+        else:
+            record.formatted_time = record.time.strftime('%I:%M %p')
+
+        record.services_list = [rs.service.name for rs in record.reservation_services.all()]
+
+        if record.type == 'old':
+            record.patient_id = patient_dict.get(record.patient_name, None)
+        else:
+            record.patient_id = None
+
+    return {
+        'records': records,
+        'today_reservations': today_reservations,
+        'query': query,  # تمرير قيمة البحث للقالب للمساعدة في العرض
+    }
+    
+    
+def get_patients_data(query=None):
+    """تعالج بيانات المرضى وترجع قائمة مناسبة للعرض."""
+    if query:
+        records = patient.objects.filter(
+            Q(name__icontains=query) |
+            Q(phone__icontains=query)
+        )
+    else:
+        records = patient.objects.all()
+    return {'records': records}
+
+def simple_patients_partial(request):
+    query = request.GET.get('q')
+    context = get_patients_data(query)
+    return render(request, 'web/patients_partial.html', context)
+    
+    
+def get_payments_data(query=None):
+    """
+    تعالج بيانات Payment وترجع قائمة مناسبة للعرض.
+    إذا تم تمرير قيمة بحث (query)، يتم تصفية الفواتير بناءً على اسم المريض أو طريقة الدفع أو الحالة.
+    """
+    if query:
+        payments = Payment.objects.filter(
+            Q(patient__icontains=query) |
+            Q(method__icontains=query) |
+            Q(status__icontains=query)
+        )
+    else:
+        payments = Payment.objects.all()
+    return {'records': payments}
+
+def simple_payments_partial(request):
+    query = request.GET.get('q', '')
+    context = get_payments_data(query=query)
+    return render(request, 'web/payments_partial.html', context)    
+
+def get_analytics_data(request):
+    
+    # استخراج الإطار الزمني المطلوب (افتراضي 'day')
+    time_frame = request.GET.get('time_frame', 'day').lower()
+    
+    # بيانات اليوم
+    today = date.today()
+    recent_period = today - timedelta(days=14)  # آخر  أيام
+
+    todays_appointments = Reserve.objects.filter(date=today)
+    todays_payments = Payment.objects.filter(date=today)
+    todays_patients = patient.objects.filter(created_at__date=today)
+    
+    total_appointments_today = todays_appointments.count()
+    total_patients_today = todays_patients.count()
+    total_revenue_today = sum([p.get_total_amount() for p in todays_payments])
+    
+    # بيانات الفترة الأخيرة (الأسبوع الماضي)
+    recent_appointments = Reserve.objects.filter(date__gte=recent_period).order_by('-date')
+    recent_payments = Payment.objects.filter(date__gte=recent_period).order_by('-date')
+    recent_patients = patient.objects.filter(created_at__date__gte=recent_period).order_by('-created_at')
+    
+    # تحديد دالة التجميع المناسبة بناءً على الإطار الزمني
+    if time_frame == 'day':
+        trunc_func = TruncDay
+    elif time_frame == 'week':
+        trunc_func = TruncWeek
+    elif time_frame == 'year':
+        trunc_func = TruncYear
+    else:
+        trunc_func = TruncMonth  # الافتراضي إذا لم يكن 'day' أو 'week' أو 'year'
+    
+    # تجميع بيانات الحجوزات الزمنية
+    appointments_by_time = (
+        Reserve.objects
+        .annotate(period=trunc_func('date'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    payments_by_time = (
+        Payment.objects
+        .annotate(period=trunc_func('date'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    patients_by_time = (
+        patient.objects
+        .annotate(period=trunc_func('created_at'))
+        .values('period')
+        .annotate(count=Count('id'))
+        .order_by('period')
+    )
+    
+    return {
+        'time_frame': time_frame,
+        'appointments_by_time': list(appointments_by_time),
+        'payments_by_time': list(payments_by_time),
+        'patients_by_time': list(patients_by_time),
+        # ملخص بيانات اليوم
+        'total_appointments_today': total_appointments_today,
+        'total_patients_today': total_patients_today,
+        'total_revenue_today': total_revenue_today,
+        # بيانات الفترة الأخيرة (آخر أسبوع)
+        'recent_appointments': recent_appointments,
+        'recent_payments': recent_payments,
+        'recent_patients': recent_patients,
+    }
+    
+    
+@login_required(login_url='login')
+def analytics(request):
+    context = get_analytics_data(request)
+    return render(request, 'web/analytics_partial.html', context)
 
 
 @login_required(login_url='login')
 def dashboard(request):
-    total_patients = patient.objects.count()
-    today = timezone.now().date()
-    appointments_today = Reserve.objects.filter(date=today).count()
-    recent_appointments = Reserve.objects.order_by('-date', '-time')[:5]
-    context= {
-        'total_patients': total_patients,
-        'appointments_today': appointments_today,
-        'recent_appointments': recent_appointments
+    query = request.GET.get('q', '')
+    appointments_data = get_appointments_data(query=query)
+    
+    # بالنسبة للمرضى، لا نمرر أي قيمة بحث حتى تظهر كل البيانات
+    patients_data = get_patients_data(query = query)
+    payments_data = get_payments_data(query=query)
+    analytics_data = get_analytics_data(request)
+    
+    context = {
+        
+        'appointments': appointments_data['records'],
+        'today_reservations': appointments_data['today_reservations'],
+        'query': appointments_data['query'],  # قيمة البحث الممررة من الدالة المساعدة
+        'patients': patients_data['records'],
+        'payments': payments_data['records'],
+        'analytics': analytics_data,  
+        
     }
-    return render(request, 'web/dashboard.html',context=context)
+    return render(request, 'web/dashboard.html', context=context)
 
 
 
@@ -227,9 +398,6 @@ def add_patient (request):
 
 
 
-from django.db.models import Q, Prefetch
-from datetime import date, datetime
-from .models import Reserve, ReservationService
 
 def Appointments(request):
     query = request.GET.get('q')  # البحث بناءً على الاسم أو الهاتف
@@ -281,6 +449,13 @@ def Appointments(request):
     # تمرير البيانات إلى القالب
     return render(request, 'web/Appointments.html', context={'records': records, 'today_reservations': today_reservations})
 
+
+
+def simple_appointments_partial(request):
+    # جلب كل سجلات الحجوزات
+    appointments = Reserve.objects.all()
+    # تمرير السجلات إلى قالب الـ partial (appointments_partial.html)
+    return render(request, 'web/appointments_partial.html', {'appointments': appointments})
 
 def view_reservation(request, pk):
     """عرض تفاصيل الحجز"""
@@ -381,6 +556,23 @@ def update_appointment_status(request, appointment_id, status):
     return redirect('Appointments')
 
 
+
+def update_appointment_status_dashboard(request, appointment_id, status):
+    record = get_object_or_404(Reserve, id=appointment_id)
+    record.status = status
+    record.save()
+
+    # إذا كانت الحالة 'completed' وكان المريض غير موجود في قاعدة بيانات المرضى
+    if status == 'completed' and not patient.objects.filter(name=record.patient_name).exists():
+        patient.objects.create(
+            name=record.patient_name,
+            phone=record.phone,
+            address='Default Address',  # يمكنك تحديث هذا إذا كان لديك عنوان محدد
+            create_at=record.create_at,
+            date_of_birth=None,  # قم بتحديثه إذا كان لديك تاريخ ميلاد للمريض
+            last_visit=None  # قم بتحديثه إذا كان لديك تاريخ الزيارة الأخير
+        )
+    return redirect('dashboard')
 
 
 
